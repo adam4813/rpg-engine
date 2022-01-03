@@ -1,0 +1,25 @@
+function(set_warning_flag)
+cmake_parse_arguments("SET_WARNING_FLAG" "" "TARGET" "" ${ARGN})
+if (MSVC)
+	set(WARNING_FLAG /W4)
+else ()
+	set(WARNING_FLAG -Wall)
+endif ()
+if (TARGET ${SET_WARNING_FLAG_TARGET})
+	set_property(TARGET ${SET_WARNING_FLAG_TARGET} APPEND_STRING PROPERTY COMPILE_FLAGS ${WARNING_FLAG})
+endif()
+endfunction()
+
+# Used by IDEs to nicely view header files
+function(set_source_group_property)
+cmake_parse_arguments("SET_SOURCE_GROUP_PROPERTY" "" "FILE_LIST;GROUP_NAME" "" ${ARGN})
+
+if (SET_SOURCE_GROUP_PROPERTY_GROUP_NAME)
+	set(GROUP_NAME ${SET_SOURCE_GROUP_PROPERTY_GROUP_NAME})
+else ()
+	set(GROUP_NAME Headers)
+endif ()
+source_group(${GROUP_NAME} FILES ${SET_SOURCE_GROUP_PROPERTY_FILE_LIST})
+set_property(SOURCE ${SET_SOURCE_GROUP_PROPERTY_FILE_LIST} PROPERTY HEADER_FILE_ONLY true)
+endfunction()
+

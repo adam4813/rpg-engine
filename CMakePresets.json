@@ -1,0 +1,207 @@
+{
+	"version": 3,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 20,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "base",
+			"hidden": true,
+			"description": "Sets Ninja generator, compilers, x64 architecture, build and install directory, debug build type",
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
+			"toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+			"cacheVariables": {
+				"CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "x64-windows-debug",
+			"displayName": "x64 Debug",
+			"description": "Sets debug build type and x64 arch",
+			"inherits": "base",
+			"architecture": {
+				"value": "x64",
+				"strategy": "external"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
+		},
+		{
+			"name": "x64-windows-release",
+			"displayName": "x64 Release",
+			"description": "Sets release build type",
+			"inherits": "x64-windows-debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "x86-windows-debug",
+			"displayName": "x86 Debug ",
+			"description": "Sets debug build type and x86 arch",
+			"inherits": "base",
+			"architecture": {
+				"value": "x86",
+				"strategy": "external"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
+		},
+		{
+			"name": "x86-windows-release",
+			"displayName": "x86 Release",
+			"description": "Sets release build type",
+			"inherits": "x86-windows-debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "x64-linux-debug",
+			"displayName": "Linux Debug",
+			"description": "Sets GCC",
+			"inherits": "base",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "gcc",
+				"CMAKE_CXX_COMPILER": "g++"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Linux"
+			}
+		},
+		{
+			"name": "x64-linux-release",
+			"displayName": "Linux Release",
+			"description": "Sets release build type",
+			"inherits": "x64-linux-debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "x64-osx-debug",
+			"displayName": "OSX Debug",
+			"description": "Sets GCC",
+			"inherits": "base",
+			"cacheVariables": {
+				"CMAKE_C_COMPILER": "gcc",
+				"CMAKE_CXX_COMPILER": "g++"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Darwin"
+			}
+		},
+		{
+			"name": "x64-osx-release",
+			"displayName": "OSX Release",
+			"description": "Sets release build type",
+			"inherits": "x64-osx-debug",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "tests",
+			"displayName": "Tests",
+			"description": "Enables building of tests",
+			"inherits": "base",
+			"cacheVariables": {
+				"BUILD_TESTS": true
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "x64-linux-default-build",
+			"displayName": "Default",
+			"configurePreset": "x64-linux-debug",
+			"description": "Vanilla build"
+		},
+		{
+			"name": "x64-osx-default-build",
+			"displayName": "Default",
+			"configurePreset": "x64-osx-debug",
+			"description": "Vanilla build"
+		},
+		{
+			"name": "x64-windows-default-build",
+			"displayName": "Default",
+			"configurePreset": "x64-windows-debug",
+			"description": "Vanilla build"
+		},
+		{
+			"name": "x86-windows-default-build",
+			"displayName": "Default",
+			"configurePreset": "x86-windows-debug",
+			"description": "Vanilla build"
+		},
+		{
+			"name": "verbose-build-linux",
+			"displayName": "Verbose Build",
+			"description": "Passes -v to Ninja",
+			"configurePreset": "x64-linux-debug",
+			"nativeToolOptions": [ "-v" ]
+		},
+		{
+			"name": "verbose-build-windows",
+			"displayName": "Verbose Build",
+			"configurePreset": "x64-windows-debug",
+			"inherits": "verbose-build-linux"
+		},
+		{
+			"name": "tests",
+			"displayName": "Tests",
+			"configurePreset": "tests",
+			"description": "Tests build"
+		}
+	],
+	"testPresets": [
+		{
+			"name": "core-test-x64-linux",
+			"description": "Enable output on failure",
+			"configurePreset": "tests",
+			"output": {
+				"outputOnFailure": true
+			}
+		},
+		{
+			"name": "core-test-x64-windows",
+			"description": "Enable output on failure",
+			"configurePreset": "tests",
+			"output": {
+				"outputOnFailure": true
+			},
+			"execution": {
+				"noTestsAction": "error"
+			}
+		},
+		{
+			"name": "core-test-x86-windows",
+			"inherits": "core-test-x64-windows",
+			"configurePreset": "tests",
+			"execution": {
+				"noTestsAction": "error"
+			}
+		},
+		{
+			"name": "core-test-x64-osx",
+			"inherits": "core-test-x64-linux",
+			"configurePreset": "tests"
+		}
+	]
+}

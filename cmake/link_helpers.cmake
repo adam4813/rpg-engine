@@ -1,0 +1,27 @@
+function(link_client_libs)
+cmake_parse_arguments("LINK_CLIENT_LIBS" "" "TARGET" "" ${ARGN})
+if (TARGET ${LINK_CLIENT_LIBS_TARGET})
+	message("Linking client libs to ${LINK_CLIENT_LIBS_TARGET}")
+
+	find_package(OpenGL REQUIRED)
+	find_package(GLEW REQUIRED)
+	find_package(glfw3 CONFIG REQUIRED)
+	find_package(OpenAL CONFIG REQUIRED)
+	find_package(imgui CONFIG REQUIRED)
+
+	set(ADDITIONAL_GL_LIBS ${OPENGL_gl_LIBRARY} ${X11_LIBRARIES} ${OSX_LIBRARIES})
+	set(CLIENT_LINK_LIBS glfw ${ADDITIONAL_GL_LIBS} GLEW::GLEW OpenAL::OpenAL imgui::imgui)
+
+	target_link_libraries(${LINK_CLIENT_LIBS_TARGET} PUBLIC ${CLIENT_LINK_LIBS})
+endif()
+endfunction()
+
+function(link_common_lib)
+	cmake_parse_arguments("LINK_COMMON_LIB" "" "TARGET" "" ${ARGN})
+	if (TARGET ${LINK_COMMON_LIB_TARGET})
+		if (TARGET ${rpg-common_LIBRARY_NAME})
+			message("Linking ${rpg-common_LIBRARY_NAME} lib to ${LINK_COMMON_LIB_TARGET}")
+			target_link_libraries(${LINK_COMMON_LIB_TARGET} PUBLIC ${rpg-common_LIBRARY_NAME})
+		endif()
+	endif()
+endfunction()

@@ -1,0 +1,35 @@
+syntax = "proto2";
+
+package rpg.proto;
+
+message Position {
+	required float x = 1;
+	required float y = 2;
+	required float z = 3;
+}
+
+message Orientation {
+	required float x = 1;
+	required float y = 2;
+	required float z = 3;
+	optional float w = 4;
+}
+
+message Scale {
+	required float x = 1;
+	required float y = 2;
+	required float z = 3;
+}
+
+message Component {
+	oneof component {
+		Position position = 1;
+		Orientation orientation = 2;
+		Scale scale = 3;
+	}
+}
+
+message Entity {
+	required uint64 id = 1;
+	repeated Component components = 2;
+}

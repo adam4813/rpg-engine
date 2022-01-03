@@ -1,0 +1,19 @@
+{
+	"$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+	"name": "rpg",
+	"version": "0.1",
+	"dependencies": [
+		"asio",
+		"bullet3",
+		"glfw3",
+		"glm",
+		"glew",
+		"openal-soft",
+		"protobuf",
+		"zlib",
+		"imgui",
+		"spdlog",
+		"gtest"
+	],
+	"supports": "(windows & x86) | (windows & x64) | (linux & x64) | (osx & x64)"
+}

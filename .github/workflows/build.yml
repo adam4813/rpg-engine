@@ -1,0 +1,143 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-workflow.json
+
+name: RPG Game
+
+on:
+  pull_request:
+  push:
+    tags: [v*]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          [
+            windows-latest,
+            windows-2016,
+            ubuntu-18.04,
+            ubuntu-16.04,
+            macOS-latest,
+          ]
+        arch: [x86, x64]
+        include:
+          - os: windows-latest
+            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
+            vcpkgTripletOs: windows
+          - os: windows-2016
+            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
+            vcpkgTripletOs: windows
+          - os: ubuntu-18.04
+            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
+            vcpkgTripletOs: linux
+          - os: ubuntu-16.04
+            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
+            vcpkgTripletOs: linux
+          - os: macOS-latest
+            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
+            vcpkgTripletOs: osx
+        exclude:
+          - os: ubuntu-18.04
+            arch: x86
+          - os: ubuntu-16.04
+            arch: x86
+          - os: macOS-latest
+            arch: x86
+    env:
+      buildDir: "${{ github.workspace }}/build"
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: lukka/get-cmake@latest
+      - name: Install os deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
+      - name: Set gcc-9 on Ubuntu16.04
+        uses: lukka/set-shell-env@v1
+        if: contains( matrix.os, 'ubuntu-16.04')
+        with:
+          CC: gcc-9
+          CXX: g++-9
+      - name: Restore artifacts, or run vcpkg, build and cache artifacts
+        uses: lukka/run-vcpkg@v10
+        id: runvcpkg
+        with:
+          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
+          vcpkgTriplet: ${{ env.VCPKG_DEFAULT_TRIPLET }}
+          vcpkgGitCommitId: "${{ matrix.vcpkgCommitId }}"
+      - name: Configure cmake and build
+        uses: lukka/run-cmake@v10
+        id: runcmake_cmd
+        with:
+          configPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
+          buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-default-build
+          testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
+      - name: Upload the build artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: "${{ matrix.os }}"
+          path: |
+            ${{ env.buildDir }}/client/rpg-client*
+            ${{ env.buildDir }}/client/*.dll
+            ${{ env.buildDir }}/server/rpg-server*
+          if-no-files-found: ignore
+  prepublish:
+    runs-on: ubuntu-latest
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    name: Create Release
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: "${{ github.ref }}"
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+  publish:
+    runs-on: ubuntu-latest
+    needs: prepublish
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          [
+            windows-latest,
+            windows-2016,
+            ubuntu-18.04,
+            ubuntu-16.04,
+            macOS-latest,
+          ]
+        arch: [x64]
+    if: startsWith(github.ref, 'refs/tags/v')
+    name: Upload Release Asset(s)
+    steps:
+      - name: Download a single artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: "${{ matrix.os }}"
+      - name: Package release
+        run: |
+          zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.buildDir }}/client
+          zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.buildDir }}/server
+      - name: Upload Release Asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.prepublish.outputs.upload_url }}
+          asset_path: "./${{ matrix.os }}.zip"
+          asset_name: "${{ matrix.os }}.zip"
+          asset_content_type: application/zip
