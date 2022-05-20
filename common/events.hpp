@@ -10,7 +10,7 @@ struct MouseHover {
 };
 
 struct KeyboardEvent {
-	enum KEY_ACTION { KEY_DOWN, KEY_UP, KEY_REPEAT, KEY_CHAR };
+	enum class KEY_ACTION { KEY_DOWN, KEY_UP, KEY_REPEAT, KEY_CHAR };
 	int key{0};
 	int scancode{0};
 	KEY_ACTION action;
@@ -18,10 +18,10 @@ struct KeyboardEvent {
 };
 
 struct MouseBtnEvent {
-	enum MOUSE_BTN_ACTION { DOWN, UP };
-	enum MOUSE_BTN { LEFT, RIGHT, MIDDLE };
-	MOUSE_BTN_ACTION action;
-	MOUSE_BTN button;
+	enum class MOUSE_BTN_ACTION { DOWN, UP, UNKNOWN };
+	enum class MOUSE_BTN { LEFT, RIGHT, MIDDLE };
+	MOUSE_BTN_ACTION action = MOUSE_BTN_ACTION::UNKNOWN;
+	MOUSE_BTN button = MOUSE_BTN::LEFT;
 };
 
 /** Mouse change of position event */

@@ -1,11 +1,11 @@
 #pragma once
 
 #ifndef __APPLE__
-#include <GL/glew.h>
+#include <gl/glew.h>
 #endif
 
 #ifdef WIN32
-#include <GL/wglew.h>
+#include <gl/wglew.h>
 #endif
 
 #ifdef __APPLE__
@@ -14,15 +14,16 @@
 #include <GLFW/glfw3.h>
 
 #include <chrono>
-#include <vector>
 
 #include "event-system.hpp"
+#include "os-event-dispatcher.hpp"
 
 namespace rpg {
 struct KeyboardEvent;
+struct MouseMoveEvent;
 namespace os {
 
-class OS : public EventQueue<KeyboardEvent> {
+class OS final : public EventQueue<KeyboardEvent>, public EventQueue<MouseMoveEvent> {
 public:
 	/**
 	* \brief Initialize the rendering window and makes the window's context the current one.
@@ -35,22 +36,22 @@ public:
 	* \return bool If creation was successful or not.
 	*/
 	bool InitializeWindow(
-			const int width,
-			const int height,
-			const std::string title,
-			const int glMajor = 3,
-			const int glMinor = 3,
+			int width,
+			int height,
+			const std::string& title,
+			int glMajor = 3,
+			int glMinor = 3,
 			bool fullscreen = false);
 
 	/** \brief Make the context of the window current for the calling thread
 	*
 	*/
-	void MakeCurrent();
+	void MakeCurrent() const;
 
 	/** \brief Sets the desired window aspect ratio numerator:denominator e.g. 16:9, 4:3
 	*
 	*/
-	void SetWindowAspectRatio(const unsigned int numerator = 16, const unsigned int denominator = 9);
+	void SetWindowAspectRatio(const int numerator = 16, const int denominator = 9) const;
 
 	/** \brief Toggles between fullscreen and windowed mode based.
 	*
@@ -67,7 +68,6 @@ public:
 	*
 	* This is a static method so it can be called from anywhere to terminate the current
 	* window.
-	* \return void
 	*/
 	static void Terminate();
 
@@ -76,7 +76,6 @@ public:
 	*
 	* Since the main loop is based on that close status of that active window
 	* this effectively causes Closing() to return true during an upcoming message loop.
-	* \return void
 	*/
 	void Quit();
 
@@ -89,8 +88,6 @@ public:
 
 	/**
 	* \brief Swap the front and back buffers. Call after rendering.
-	*
-	* \return void
 	*/
 	void SwapBuffers();
 
@@ -135,66 +132,6 @@ public:
 	*/
 	GLFWwindow* GetWindow();
 
-	/**
-	* \brief Callback for when the window is resized.
-	*
-	* \param[in] GLFWwindow* window
-	* \param[in] int width, height The new client width and height of the window.
-	* \return void
-	*/
-	static void WindowResized(GLFWwindow* window, int width, int height);
-
-	/**
-	* \brief Callback for keyboard events.
-	*
-	* \param[in] GLFWwindow* window
-	* \param[in] int key ASCII key number.
-	* \param[in] int scancode The converted key value
-	* \param[in] int action The event type.
-	* \param[in] int mods Modifier keys.
-	* \return void
-	*/
-	static void KeyboardEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
-
-	/**
-	* \brief Callback for Unicode character event.
-	*
-	* This is different from just a normal keyboard event as it has been translated and
-	* modified by the OS and is just like typing into a text editor.
-	* \param[in] GLFWwindow* window
-	* \param[in] unsigned int uchar The Unicode character key code.
-	* \return void
-	*/
-	static void CharacterEventCallback(GLFWwindow* window, unsigned int uchar);
-
-	/**
-	* \brief Callback for mouse move events.
-	*
-	* \param[in] GLFWwindow* window
-	* \param[in] double x, y The new x and y coordinate of the mouse in screen coordinates.
-	* \return void
-	*/
-	static void MouseMoveEventCallback(GLFWwindow* window, double x, double y);
-
-	/**
-	* \brief Callback for mouse scroll events.
-	*
-	* \param[in] GLFWwindow* window
-	* \param[in] double x, y The delta x and y of the mouse wheel.
-	* \return void
-	*/
-	static void MouseScrollEventCallback(GLFWwindow* window, double x, double y);
-
-	/**
-	* \brief Callback for mouse button events.
-	*
-	* \param[in] GLFWwindow* window
-	* \param[in] int button The button that the action occurred on.
-	* \param[in] int action The action that occurred.
-	* \param[in] int mods Modifier keys.
-	* \return void
-	*/
-	static void MouseButtonEventCallback(GLFWwindow* window, int button, int action, int mods);
 
 	/**
 	* \brief Callback for window focus change events.
@@ -204,16 +141,6 @@ public:
 	* \return void
 	*/
 	static void WindowFocusChangeCallback(GLFWwindow* window, int focused);
-
-	/**
-	* \brief Callback for window focus change events.
-	*
-	* \param[in] GLFWwindow* window
-	* \param[in] int count The number of files dropped.
-	* \param[in] const char** paths Array of filenames.
-	* \return void
-	*/
-	static void FileDropCallback(GLFWwindow* window, int count, const char** paths);
 
 	void EnableMouseLock();
 
@@ -225,7 +152,7 @@ public:
 	* \param[in] double x, y The new x and y coordinate of the mouse in screen coordinates.
 	* \return void
 	*/
-	static void SetMousePosition(const double x, const double y);
+	static void SetMousePosition(double x, double y);
 
 	/**
 	* \brief Gets the mouse cursor position relative to the upper-left corner of the window.
@@ -238,83 +165,35 @@ public:
 	static const GLFWwindow* GetFocusedWindow() { return OS::focused_window; }
 
 private:
+	friend class OsEventDispatcher;
+	OsEventDispatcher event_dispatcher;
+
 	/**
 	* \brief Keyboard event listener, useful for events such as alt-enter to toggle fullscreen.
 	*
 	* \param[in] std::shared_ptr<KeyboardEvent> data Keyboard event data
-	* \return void
 	*/
 	using EventQueue<KeyboardEvent>::On;
 	void On(std::shared_ptr<KeyboardEvent> data);
+	/**
+	* \brief Mouse move event listener, used to handle mouse lock
+	*
+	* \param[in] std::shared_ptr<MouseMoveEvent> data Keyboard event data
+	*/
+	using EventQueue<MouseMoveEvent>::On;
+	void On(std::shared_ptr<MouseMoveEvent> data);
 
 	/**
 	* \brief Updates the internal size variables from the windowResized callback.
 	*
 	* \param[in] const int width, height The new client width and height of the window
-	* \return void
 	*/
 	void UpdateWindowSize(const int width, const int height);
 
-	/**
-	* \brief Dispatches keyboard events from the callback.
-	*
-	* \param[in] const int key ASCII key number.
-	* \param[in] const int scancode The converted key value
-	* \param[in] const int action The event type.
-	* \param[in] const int mods Modifier keys.
-	* \return void
-	*/
-	void DispatchKeyboardEvent(const int key, const int scancode, const int action, const int mods);
-
-	/**
-	* \brief Dispatches a character event.
-	*
-	* \param[in] const unsigned int uchar The Unicode character key code.
-	* \return void
-	*/
-	void DispatchCharacterEvent(const unsigned int uchar);
-
-	/**
-	* \brief Dispatches mouse movement events.
-	*
-	* It determines the changes in mouse position and stores the new position for later.
-	* \param[in] const double x, y The new x and y coordinate of the mouse in screen coordinates.
-	* \return void
-	*/
-	void DispatchMouseMoveEvent(const double x, const double y);
-
-	/**
-	* \brief Dispatches mouse scroll events.
-	*
-	* It determines the changes in mouse position and stores the new position for later.
-	* \param[in] const double xoffset, yoffset The delta x and y coordinate of the mouse wheel.
-	* \return void
-	*/
-	void DispatchMouseScrollEvent(const double xoffset, const double yoffset);
-
-	/**
-	* \brief Dispatches mouse button events from the callback.
-	*
-	* \param[in] const int button The button that the action occurred on.
-	* \param[in] const int action The action that occurred.
-	* \param[in] const int mods Modifier keys.
-	* \return void
-	*/
-	void DispatchMouseButtonEvent(const int button, const int action, const int mods);
-
-	/**
-	* \brief Dispatches a character event.
-	*
-	* \param[in] const int count The number of files dropped.
-	* \param[in] const char** paths Array of filenames.
-	* \return void
-	*/
-	void DispatchFileDropEvent(const int count, const char** paths);
 
 	GLFWwindow* window{nullptr};
 	static GLFWwindow* focused_window; // The window that currently has focus.
 	int client_width{0}, client_height{0}; // Current window's client width and height.
-	double old_mouse_x{0}, old_mouse_y{0};
 	double last_time{0}; // The time at the last call to GetDeltaTime().
 	bool mouse_lock{false}; // If mouse lock is requested.
 	static bool mouse_locked; // If mouse lock is enabled causing the cursor to snap to

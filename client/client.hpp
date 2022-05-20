@@ -9,8 +9,6 @@
 #include <alc.h>
 #include <imgui.h>
 
-#include <client.hpp>
-
 namespace rpg {
 class Client {};
 } // namespace rpg

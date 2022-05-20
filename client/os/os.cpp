@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <iostream>
 
-#include "event-system.hpp"
 #include "events.hpp"
 
 #ifdef __APPLE__
@@ -20,10 +19,8 @@ extern "C" SEL sel_getUid(const char* str);
 #endif
 
 namespace rpg {
-
-template <class T> bool IsBetween(T value, T lower, T upper) { return (value > lower) && (value < upper); }
-
 namespace os {
+
 GLFWwindow* OS::focused_window;
 bool OS::mouse_locked = false;
 
@@ -35,7 +32,7 @@ static void ErrorCallback(int error_no, const char* description) {
 bool OS::InitializeWindow(
 		const int width,
 		const int height,
-		const std::string title,
+		const std::string& title,
 		const int glMajor /*= 3*/,
 		const int glMinor /*= 3*/,
 		bool _fullscreen /*= false*/) {
@@ -165,18 +162,55 @@ bool OS::InitializeWindow(
 
 	// Associate a pointer for this instance with this window.
 	glfwSetWindowUserPointer(this->window, this);
+	glfwSetWindowFocusCallback(this->window, &OS::WindowFocusChangeCallback);
 
 	// Set up some callbacks.
-	glfwSetWindowSizeCallback(this->window, &OS::WindowResized);
-	glfwSetKeyCallback(this->window, &OS::KeyboardEventCallback);
-	glfwSetCursorPosCallback(this->window, &OS::MouseMoveEventCallback);
-	glfwSetCharCallback(this->window, &OS::CharacterEventCallback);
-	glfwSetMouseButtonCallback(this->window, &OS::MouseButtonEventCallback);
-	glfwSetScrollCallback(this->window, &OS::MouseScrollEventCallback);
-	glfwSetWindowFocusCallback(this->window, &OS::WindowFocusChangeCallback);
-	glfwSetDropCallback(this->window, &OS::FileDropCallback);
+	glfwSetWindowSizeCallback(this->window, [](GLFWwindow* _window, auto... args) {
+		OS* os = static_cast<OS*>(glfwGetWindowUserPointer(_window));
+		if (os) {
+			os->UpdateWindowSize(args...);
+		}
+	});
 
-	glfwGetCursorPos(this->window, &this->old_mouse_x, &this->old_mouse_y);
+	glfwSetKeyCallback(this->window, [](GLFWwindow* _window, auto... args) {
+		OS* os = static_cast<OS*>(glfwGetWindowUserPointer(_window));
+		if (os) {
+			os->event_dispatcher.DispatchKeyboardEvent(args...);
+		}
+	});
+	glfwSetCharCallback(this->window, [](GLFWwindow* _window, auto... args) {
+		OS* os = static_cast<OS*>(glfwGetWindowUserPointer(_window));
+		if (os) {
+			os->event_dispatcher.DispatchCharacterEvent(args...);
+		}
+	});
+	glfwSetCursorPosCallback(this->window, [](GLFWwindow* _window, auto... args) {
+		OS* os = static_cast<OS*>(glfwGetWindowUserPointer(_window));
+		if (os) {
+			os->event_dispatcher.DispatchMouseMoveEvent(args..., os->client_width, os->client_height);
+		}
+	});
+	glfwSetMouseButtonCallback(this->window, [](GLFWwindow* _window, auto... args) {
+		OS* os = static_cast<OS*>(glfwGetWindowUserPointer(_window));
+		if (os) {
+			os->event_dispatcher.DispatchMouseButtonEvent(args...);
+		}
+	});
+	glfwSetScrollCallback(this->window, [](GLFWwindow* _window, auto... args) {
+		OS* os = static_cast<OS*>(glfwGetWindowUserPointer(_window));
+		if (os) {
+			os->event_dispatcher.DispatchMouseScrollEvent(args...);
+		}
+	});
+	glfwSetDropCallback(this->window, [](GLFWwindow* _window, auto... args) {
+		OS* os = static_cast<OS*>(glfwGetWindowUserPointer(_window));
+		if (os) {
+			os->event_dispatcher.DispatchFileDropEvent(args...);
+		}
+	});
+
+	glfwGetCursorPos(this->window, &event_dispatcher.old_mouse_x, &event_dispatcher.old_mouse_y);
+
 	glfwSetInputMode(this->window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
 
 	UpdateWindowSize(width, height);
@@ -187,9 +221,9 @@ bool OS::InitializeWindow(
 	return true;
 }
 
-void OS::MakeCurrent() { glfwMakeContextCurrent(this->window); }
+void OS::MakeCurrent() const { glfwMakeContextCurrent(this->window); }
 
-void OS::SetWindowAspectRatio(const unsigned int numerator, const unsigned int denominator) {
+void OS::SetWindowAspectRatio(const int numerator, const int denominator) const {
 	glfwSetWindowAspectRatio(this->window, numerator, denominator);
 }
 
@@ -265,6 +299,7 @@ void OS::SwapBuffers() { glfwSwapBuffers(this->window); }
 void OS::OSMessageLoop() {
 	glfwPollEvents();
 	EventQueue<KeyboardEvent>::ProcessEventQueue();
+	EventQueue<MouseMoveEvent>::ProcessEventQueue();
 	if (this->mouse_lock != OS::mouse_locked) {
 		OS::mouse_locked = this->mouse_lock;
 		glfwSetInputMode(this->window, GLFW_CURSOR, OS::mouse_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
@@ -286,59 +321,6 @@ double OS::GetDeltaTime() {
 
 double OS::GetTime() { return glfwGetTime(); }
 
-void OS::WindowResized(GLFWwindow* window, int width, int height) {
-	// Get the user pointer and cast it.
-	OS* os = static_cast<OS*>(glfwGetWindowUserPointer(window));
-
-	if (os) {
-		os->UpdateWindowSize(width, height);
-	}
-}
-
-void OS::KeyboardEventCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-	// Get the user pointer and cast it.
-	OS* os = static_cast<OS*>(glfwGetWindowUserPointer(window));
-
-	if (os) {
-		os->DispatchKeyboardEvent(key, scancode, action, mods);
-	}
-}
-
-void OS::CharacterEventCallback(GLFWwindow* window, unsigned int uchar) {
-	// Get the user pointer and cast it.
-	OS* os = static_cast<OS*>(glfwGetWindowUserPointer(window));
-
-	if (os) {
-		os->DispatchCharacterEvent(uchar);
-	}
-}
-
-void OS::MouseMoveEventCallback(GLFWwindow* window, double x, double y) {
-	// Get the user pointer and cast it.
-	OS* os = static_cast<OS*>(glfwGetWindowUserPointer(window));
-
-	if (os) {
-		os->DispatchMouseMoveEvent(x, y);
-	}
-}
-
-void OS::MouseScrollEventCallback(GLFWwindow* window, double x, double y) {
-	// Get the user pointer and cast it.
-	OS* os = static_cast<OS*>(glfwGetWindowUserPointer(window));
-
-	if (os) {
-		os->DispatchMouseScrollEvent(x, y);
-	}
-}
-
-void OS::MouseButtonEventCallback(GLFWwindow* window, int button, int action, int mods) {
-	// Get the user pointer and cast it.
-	OS* os = static_cast<OS*>(glfwGetWindowUserPointer(window));
-
-	if (os) {
-		os->DispatchMouseButtonEvent(button, action, mods);
-	}
-}
 
 void OS::WindowFocusChangeCallback(GLFWwindow* window, int focused) {
 	if (focused == GL_FALSE) {
@@ -356,15 +338,15 @@ void OS::WindowFocusChangeCallback(GLFWwindow* window, int focused) {
 	}
 }
 
-void OS::FileDropCallback(GLFWwindow* window, int count, const char** paths) {
-	// Get the user pointer and cast it.
-	OS* os = static_cast<OS*>(glfwGetWindowUserPointer(window));
-	os->DispatchFileDropEvent(count, paths);
+void OS::On(std::shared_ptr<KeyboardEvent> data) {
+	if (data->action == KeyboardEvent::KEY_ACTION::KEY_UP && data->key == GLFW_KEY_ENTER && data->mods & GLFW_MOD_ALT) {
+		this->ToggleFullScreen();
+	}
 }
 
-void OS::On(std::shared_ptr<KeyboardEvent> data) {
-	if (data->action == KeyboardEvent::KEY_UP && data->key == GLFW_KEY_ENTER && data->mods & GLFW_MOD_ALT) {
-		this->ToggleFullScreen();
+void OS::On(std::shared_ptr<MouseMoveEvent> data) {
+	if (OS::mouse_locked) {
+		glfwSetCursorPos(this->window, data->old_x, data->old_y);
 	}
 }
 
@@ -377,113 +359,6 @@ void OS::UpdateWindowSize(const int width, const int height) {
 		this->client_width = width;
 		this->client_height = height;
 	}
-}
-
-void OS::DispatchKeyboardEvent(const int key, const int scancode, const int action, const int mods) {
-	std::shared_ptr<KeyboardEvent> key_event =
-			std::make_shared<KeyboardEvent>(KeyboardEvent{key, scancode, KeyboardEvent::KEY_DOWN, mods});
-	// Default is KEY_DOWN, check if it is REPEAT or UP instead.
-	if (action == GLFW_REPEAT) {
-		key_event->action = KeyboardEvent::KEY_REPEAT;
-	}
-	else if (action == GLFW_RELEASE) {
-		key_event->action = KeyboardEvent::KEY_UP;
-	}
-
-	EventSystem<KeyboardEvent>::Get()->Emit(key_event);
-}
-
-void OS::DispatchCharacterEvent(const unsigned int uchar) {
-	std::shared_ptr<KeyboardEvent> key_event =
-			std::make_shared<KeyboardEvent>(KeyboardEvent{(const int)uchar, 0, KeyboardEvent::KEY_CHAR, 0});
-	EventSystem<KeyboardEvent>::Get()->Emit(key_event);
-}
-
-void OS::DispatchMouseMoveEvent(const double x, const double y) {
-	if (OS::mouse_locked) {
-		// mouse lock is where we hide the cursor and constrain it to the window
-		// we also request raw mouse motion if available
-		std::shared_ptr<MouseMoveEvent> mmov_event = std::make_shared<MouseMoveEvent>(MouseMoveEvent{
-				x / this->client_width,
-				y / this->client_height,
-				static_cast<int>(this->old_mouse_x),
-				static_cast<int>(this->old_mouse_y),
-				static_cast<int>(x),
-				static_cast<int>(y)});
-		EventSystem<MouseMoveEvent>::Get()->Emit(mmov_event);
-		double client_center_x = static_cast<double>(this->client_width / 2);
-		double client_center_y = static_cast<double>(this->client_height / 2);
-		// constrain the mouse towards the center of the window
-		// we do this to prevent an initial frame of "overshoot"
-		// and also to prevent anything using absolute mode from wandering away, i.e. tooltip
-		// window
-		if (IsBetween(x, this->old_mouse_x, client_center_x)) {
-			this->old_mouse_x = x;
-		}
-		if (IsBetween(x, client_center_x, this->old_mouse_x)) {
-			this->old_mouse_x = x;
-		}
-		if (IsBetween(y, this->old_mouse_y, client_center_y)) {
-			this->old_mouse_y = y;
-		}
-		if (IsBetween(y, client_center_y, this->old_mouse_y)) {
-			this->old_mouse_y = y;
-		}
-		glfwSetCursorPos(this->window, this->old_mouse_x, this->old_mouse_y);
-		return;
-	}
-	std::shared_ptr<MouseMoveEvent> mmov_event = std::make_shared<MouseMoveEvent>(MouseMoveEvent{
-			x / this->client_width,
-			y / this->client_height,
-			static_cast<int>(this->old_mouse_x),
-			static_cast<int>(this->old_mouse_y),
-			static_cast<int>(x),
-			static_cast<int>(y)});
-	EventSystem<MouseMoveEvent>::Get()->Emit(mmov_event);
-	this->old_mouse_x = x;
-	this->old_mouse_y = y;
-}
-
-void OS::DispatchMouseScrollEvent(const double xoffset, const double yoffset) {
-	std::shared_ptr<MouseScrollEvent> mscroll_event = std::make_shared<MouseScrollEvent>(MouseScrollEvent{
-			static_cast<double>(xoffset),
-			static_cast<double>(yoffset),
-	});
-	EventSystem<MouseScrollEvent>::Get()->Emit(mscroll_event);
-}
-
-void OS::DispatchMouseButtonEvent(const int button, const int action, const int) {
-	std::shared_ptr<MouseBtnEvent> mbtn_event = std::make_shared<MouseBtnEvent>();
-	if (action == GLFW_PRESS) {
-		mbtn_event->action = MouseBtnEvent::DOWN;
-	}
-	else if (action == GLFW_RELEASE) {
-		mbtn_event->action = MouseBtnEvent::UP;
-	}
-	else { // other mouse button action?
-		return;
-	}
-	if (button == GLFW_MOUSE_BUTTON_LEFT) {
-		mbtn_event->button = MouseBtnEvent::LEFT;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-		mbtn_event->button = MouseBtnEvent::RIGHT;
-	}
-	else if (button == GLFW_MOUSE_BUTTON_MIDDLE) {
-		mbtn_event->button = MouseBtnEvent::MIDDLE;
-	}
-	EventSystem<MouseBtnEvent>::Get()->Emit(mbtn_event);
-}
-
-void OS::DispatchFileDropEvent(const int count, const char** paths) {
-	std::shared_ptr<FileDropEvent> fd_event = std::make_shared<FileDropEvent>();
-	for (int i = 0; i < count; ++i) {
-		fd_event->filenames.push_back(paths[i]);
-		while (fd_event->filenames[i].find("\\") != std::string::npos) {
-			fd_event->filenames[i].replace(fd_event->filenames[i].find("\\"), 1, "/");
-		}
-	}
-	EventSystem<FileDropEvent>::Get()->Emit(fd_event);
 }
 
 void OS::EnableMouseLock() { this->mouse_lock = true; }

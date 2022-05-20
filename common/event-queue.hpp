@@ -11,18 +11,18 @@ namespace rpg {
 
 // Container to hold event data. This is stored in the queue rather than raw event data.
 template <class T> struct Event {
-	Event(eid entity_id, std::shared_ptr<T> data) : entity_id(entity_id), data(data) {}
+	Event(const eid entity_id, std::shared_ptr<T> data) : entity_id(entity_id), data(std::move(data)) {}
 	Event(Event&& other) noexcept : entity_id(other.entity_id), data(other.data) {}
 	eid entity_id;
 	std::shared_ptr<T> data;
 };
 // Helper class containing a std::queue. The std::queue is NOT thread safe
-// so we can end up with an "emplace" in-flight while the queue is being read
-// this can lead to a race condition where the item is pop()'ed before emplace finishes
+// so we can end up with an "Emplace" in-flight while the queue is being read
+// this can lead to a race condition where the item is pop()'ed before Emplace finishes
 // that is all kinds of bad, so this wraps it with a simple spinlock if a write was happening
 template <class T> struct Queue {
 	Queue() {}
-	void emplace(T&& e) {
+	void Emplace(T&& e) {
 		std::scoped_lock<std::mutex> lock(queue_write);
 		queue.emplace(std::move(e));
 	}
@@ -58,7 +58,7 @@ public:
 		}
 	}
 
-	void QueueEvent(Event<T>&& e) { (*write_event_queue).emplace(std::move(e)); }
+	void QueueEvent(Event<T>&& e) { (*write_event_queue).Emplace(std::move(e)); }
 
 	virtual void On(const eid, std::shared_ptr<T>) {}
 	virtual void On(std::shared_ptr<T>) {}
