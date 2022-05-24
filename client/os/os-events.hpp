@@ -1,10 +1,12 @@
 #pragma once
 
-#include <components.pb.h>
+#include "util/types.hpp"
 #include <glm/glm.hpp>
+#include <string>
 #include <vector>
 
-namespace rpg {
+namespace rpg::events::os {
+
 struct MouseHover {
 	glm::vec3 ray_hit_point_world;
 };
@@ -13,7 +15,7 @@ struct KeyboardEvent {
 	enum class KEY_ACTION { KEY_DOWN, KEY_UP, KEY_REPEAT, KEY_CHAR };
 	int key{0};
 	int scancode{0};
-	KEY_ACTION action;
+	KEY_ACTION action{KEY_ACTION::KEY_DOWN};
 	int mods{0};
 };
 
@@ -36,6 +38,10 @@ struct MouseScrollEvent {
 	double x_offset{0.0}, y_offset{0.0}; /// Delta x, y of mouse wheel.
 };
 
+struct MouseLockEvent {
+	bool lock{false};
+};
+
 struct MouseClickEvent {
 	eid entity_id{0};
 	MouseBtnEvent::MOUSE_BTN button;
@@ -52,22 +58,4 @@ struct FileDropEvent {
 	std::vector<std::string> filenames;
 };
 
-struct EntityCreated {
-	proto::Entity entity;
-};
-
-struct EntityDestroyed {
-	eid entity_id{0};
-};
-
-struct FocusCapturedEvent {
-	eid entity_id;
-	bool keyboard;
-	bool mouse;
-};
-struct FocusBlurEvent {
-	eid entity_id;
-	bool keyboard;
-	bool mouse;
-};
-} // namespace rpg
+} // namespace rpg::events::os

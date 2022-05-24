@@ -2,12 +2,12 @@ project(rpg-client)
 
 set(rpg-client_SOURCES # don't include main.cpp to keep it out of tests
 	${CMAKE_CURRENT_SOURCE_DIR}/os/os.cpp
-	"${CMAKE_CURRENT_SOURCE_DIR}/os/os-event-dispatcher.cpp"
+	"${CMAKE_CURRENT_SOURCE_DIR}/os/os-event-handler.cpp"
 )
 set(rpg-client_SOURCES ${rpg-client_SOURCES} PARENT_SCOPE) # Add parent scope for test access
 
-file(GLOB_RECURSE rpg-client_HEADERS LIST_DIRECTORIES false ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
-set_source_group_property(FILE_GLOB ${rpg-client_HEADERS})
+file(GLOB_RECURSE rpg-client_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.hpp)
+set_source_group_property(FILE_LIST ${rpg-client_HEADERS})
 
 IF (APPLE)
 	EXEC_PROGRAM(uname ARGS -v OUTPUT_VARIABLE DARWIN_VERSION)
@@ -27,9 +27,5 @@ ENDIF(APPLE)
 
 set(rpg-client_PROGRAM_NAME "rpg-client")
 
-add_executable(${rpg-client_PROGRAM_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/main.cpp ${rpg-client_SOURCES} ${rpg-client_HEADERS})
-
-set_warning_flag(TARGET ${rpg-client_PROGRAM_NAME})
-
-link_common_lib(TARGET ${rpg-client_PROGRAM_NAME})
+add_program(TARGET ${rpg-client_PROGRAM_NAME} FILE_LIST ${rpg-client_SOURCES} ${rpg-client_HEADERS})
 link_client_libs(TARGET ${rpg-client_PROGRAM_NAME})

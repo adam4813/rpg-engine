@@ -13,192 +13,196 @@
 #endif
 #include <GLFW/glfw3.h>
 
-#include <chrono>
+#include "os-event-handler.hpp"
 
-#include "event-system.hpp"
-#include "os-event-dispatcher.hpp"
+#include "constants.hpp"
+#include "events/event-queue.hpp"
+#include "util/nomovenocopy.hpp"
 
 namespace rpg {
+namespace events::os {
+struct MouseLockEvent;
 struct KeyboardEvent;
 struct MouseMoveEvent;
-namespace os {
+struct WindowResizedEvent;
+} // namespace events::os
 
-class OS final : public EventQueue<KeyboardEvent>, public EventQueue<MouseMoveEvent> {
+using events::EventQueue;
+using namespace events::os;
+
+namespace os {
+class OS final :
+		public EventQueue<KeyboardEvent>,
+		public EventQueue<MouseMoveEvent>,
+		public EventQueue<MouseLockEvent>,
+		public EventQueue<WindowResizedEvent>,
+		public util::NoMoveNoCopy {
 public:
 	/**
-	* \brief Initialize the rendering window and makes the window's context the current one.
-	*
-	* \param[in] const unsigned int width, height The window's client width and height
-	* \param[in] const std::string title The title to show in the title bar and task manager.
-	* \param[in] const glMajor OpenGL major version number. Must be >= 3
-	* \param[in] const glMinor OpenGL minor version. If major = 3, must be 3 (OpenGL 3.3)
-	* \param[in] bool fullscreen Whether the window should be started in fullscreen mode.
-	* \return bool If creation was successful or not.
-	*/
+	 * @brief Initialize the rendering window and makes the window's context the current one.
+	 *
+	 * @param[in] width The window's client width
+	 * @param[in] height The window's client height
+	 * @param[in] title The title to show in the title bar and task manager.
+	 * @param[in] requested_gl_version OpenGL major version number. Must be >= OpenGL 3.3
+	 * @param[in] start_fullscreen Whether the window should be started in fullscreen mode.
+	 * @return If creation was successful or not.
+	 */
 	bool InitializeWindow(
 			int width,
 			int height,
 			const std::string& title,
-			int glMajor = 3,
-			int glMinor = 3,
-			bool fullscreen = false);
+			config::GL_VERSION_PAIR requested_gl_version = config::PREFERRED_GL_VERSION,
+			bool start_fullscreen = false);
 
-	/** \brief Make the context of the window current for the calling thread
-	*
-	*/
+	/** @brief Make the context of the window current for the calling thread
+	 *
+	 */
 	void MakeCurrent() const;
 
-	/** \brief Sets the desired window aspect ratio numerator:denominator e.g. 16:9, 4:3
-	*
-	*/
-	void SetWindowAspectRatio(const int numerator = 16, const int denominator = 9) const;
+	/** @brief Sets the desired window aspect ratio numerator:denominator e.g. 16:9, 4:3
+	 *
+	 */
+	void SetWindowAspectRatio(int numerator = 16, int denominator = 9) const;
 
-	/** \brief Toggles between fullscreen and windowed mode based.
-	*
-	*/
-	void ToggleFullScreen();
+	/** @brief Toggles between fullscreen and windowed mode based.
+	 *
+	 */
+	void ToggleFullScreen() const;
 
-	/** \brief Detach the context of the window from the calling thread
-	*
-	*/
-	void DetachContext();
+	/** @brief Detach the context of the window from the calling thread
+	 *
+	 */
+	static void DetachContext();
 
 	/**
-	* \brief Calls GLFWTerminate to close the window.
-	*
-	* This is a static method so it can be called from anywhere to terminate the current
-	* window.
-	*/
+	 * @brief Calls GLFWTerminate to close the window.
+	 *
+	 * This is a static method so it can be called from anywhere to terminate the current
+	 * window.
+	 */
 	static void Terminate();
 
 	/**
-	* \brief Tells the OS that the active window should close.
-	*
-	* Since the main loop is based on that close status of that active window
-	* this effectively causes Closing() to return true during an upcoming message loop.
-	*/
-	void Quit();
+	 * @brief Tells the OS that the active window should close.
+	 *
+	 * Since the main loop is based on that close status of that active window
+	 * this effectively causes Closing() to return true during an upcoming message loop.
+	 */
+	void Quit() const;
 
 	/**
-	* \brief Checks if the window is closing.
-	*
-	* \return bool True if the window is closing.
-	*/
-	bool Closing();
+	 * @brief Checks if the window is closing.
+	 *
+	 * @return True if the window is closing.
+	 */
+	bool Closing() const;
 
 	/**
-	* \brief Swap the front and back buffers. Call after rendering.
-	*/
-	void SwapBuffers();
+	 * @brief Swap the front and back buffers. Call after rendering.
+	 */
+	void SwapBuffers() const;
 
 	/**
-	* \brief Processes events in the OS message event loop.
-	*
-	*/
+	 * @brief Processes events in the OS message event loop.
+	 *
+	 */
 	void OSMessageLoop();
 
 	/**
-	* \brief Gets the cached window width.
-	*
-	* \return int The window width.
-	*/
+	 * @brief Gets the cached window width.
+	 *
+	 * @return The window width.
+	 */
 	int GetWindowWidth() const;
 
 	/**
-	* \brief Gets the cached window height.
-	*
-	* \return int The window height.
-	*/
+	 * @brief Gets the cached window height.
+	 *
+	 * @return The window height.
+	 */
 	int GetWindowHeight() const;
 
 	/**
-	* \brief Returns the time since the start of the program.
-	*
-	* \return double The amount of time that have passed since the last call in seconds.
-	*/
+	 * @brief Returns the time since the start of the program.
+	 *
+	 * @return The amount of time that have passed since the last call in seconds.
+	 */
 	double GetDeltaTime();
 
 	/**
-	* \brief Returns the time since initialization from glfw.
-	*
-	* \return double The amount of time since glfw was initialized in seconds.
-	*/
-	double GetTime();
+	 * @brief Returns the time since initialization from glfw.
+	 *
+	 * @return The amount of time since glfw was initialized in seconds.
+	 */
+	static double GetTime();
 
 	/**
-	* \brief Returns the current active window.
-	*
-	* \return GLFWwindow* The current active window.
-	*/
-	GLFWwindow* GetWindow();
-
-
-	/**
-	* \brief Callback for window focus change events.
-	*
-	* \param[in] GLFWwindow* window
-	* \param[in] int focused GL_TRUE if focused, GL_FALSE if unfocused.
-	* \return void
-	*/
-	static void WindowFocusChangeCallback(GLFWwindow* window, int focused);
-
-	void EnableMouseLock();
-
-	void DisableMouseLock();
+	 * @brief Returns the current active window.
+	 *
+	 * @return The current active window.
+	 */
+	GLFWwindow* GetWindow() const;
 
 	/**
-	* \brief Sets the mouse cursor position relative to the upper-left corner of the window.
-	*
-	* \param[in] double x, y The new x and y coordinate of the mouse in screen coordinates.
-	* \return void
-	*/
+	 * @brief Sets the mouse cursor position relative to the upper-left corner of the window.
+	 *
+	 * @param[in] x The new x coordinate of the mouse in screen coordinates.
+	 * @param[in] y The new y coordinate of the mouse in screen coordinates.
+	 */
 	static void SetMousePosition(double x, double y);
 
 	/**
-	* \brief Gets the mouse cursor position relative to the upper-left corner of the window.
-	*
-	* \param[out] double* x, y The current x and y coordinate of the mouse in screen coordinates.
-	* \return void
-	*/
+	 * @brief Gets the mouse cursor position relative to the upper-left corner of the window.
+	 *
+	 * @param[out] x The current x coordinate of the mouse in screen coordinates.
+	 * @param[out] y The current y coordinate of the mouse in screen coordinates.
+	 */
 	static void GetMousePosition(double* x, double* y);
 
-	static const GLFWwindow* GetFocusedWindow() { return OS::focused_window; }
+	inline static GLFWwindow* focused_window{nullptr}; // The window that currently has focus.
+
+	static bool IsMouseLocked() { return mouse_locked; }
 
 private:
-	friend class OsEventDispatcher;
-	OsEventDispatcher event_dispatcher;
+	OSEventHandler event_handler;
 
-	/**
-	* \brief Keyboard event listener, useful for events such as alt-enter to toggle fullscreen.
-	*
-	* \param[in] std::shared_ptr<KeyboardEvent> data Keyboard event data
-	*/
 	using EventQueue<KeyboardEvent>::On;
-	void On(std::shared_ptr<KeyboardEvent> data);
 	/**
-	* \brief Mouse move event listener, used to handle mouse lock
-	*
-	* \param[in] std::shared_ptr<MouseMoveEvent> data Keyboard event data
-	*/
+	 * @brief Keyboard event listener, useful for events such as alt-enter to toggle fullscreen.
+	 *
+	 * @param[in] data Keyboard event data
+	 */
+	void On(std::shared_ptr<KeyboardEvent> data) override;
+
 	using EventQueue<MouseMoveEvent>::On;
-	void On(std::shared_ptr<MouseMoveEvent> data);
-
 	/**
-	* \brief Updates the internal size variables from the windowResized callback.
-	*
-	* \param[in] const int width, height The new client width and height of the window
-	*/
-	void UpdateWindowSize(const int width, const int height);
+	 * @brief Mouse move event listener
+	 *
+	 * @param[in] data Keyboard event data
+	 */
+	void On(std::shared_ptr<MouseMoveEvent> data) override;
+	using EventQueue<MouseLockEvent>::On;
+	/**
+	 * @brief Mouse lock event listener
+	 *
+	 * @param[in] data Keyboard event data
+	 */
+	void On(std::shared_ptr<MouseLockEvent> data) override;
 
+	using EventQueue<WindowResizedEvent>::On;
+	/**
+	 * @brief Mouse lock event listener
+	 *
+	 * @param[in] data Window resized event data
+	 */
+	void On(std::shared_ptr<WindowResizedEvent> data) override;
 
 	GLFWwindow* window{nullptr};
-	static GLFWwindow* focused_window; // The window that currently has focus.
 	int client_width{0}, client_height{0}; // Current window's client width and height.
 	double last_time{0}; // The time at the last call to GetDeltaTime().
-	bool mouse_lock{false}; // If mouse lock is requested.
-	static bool mouse_locked; // If mouse lock is enabled causing the cursor to snap to
-			// mid-window each movement event.
-	bool fullscreen{false}; // False if the game is in windowed mode
+	inline static bool mouse_locked{false}; // If mouse lock is locked, e.g. for mouse look in an FPS.
+	inline static bool fullscreen{false}; // False if the game is in windowed mode
 };
 } // namespace os
 } // namespace rpg

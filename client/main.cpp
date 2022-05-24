@@ -22,11 +22,9 @@ int main(int argc, char const* argv[]) {
 
 	using namespace rpg::config;
 	log->info("Initializing OpenGL...");
-	if (!os.InitializeWindow(
-				WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, PREFERRED_GL_VERSION.major, PREFERRED_GL_VERSION.minor)) {
+	if (!os.InitializeWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)) {
 		log->warn("The OpenGL 4.0 context wasn't created properly, attempting fallback");
-		if (!os.InitializeWindow(
-					WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, FALLBACK_GL_VERSION.major, FALLBACK_GL_VERSION.minor)) {
+		if (!os.InitializeWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, FALLBACK_GL_VERSION)) {
 			log->error("Exiting. Can not create OpenGL 4.0 or 3.3 context. please update drivers and try again.");
 			exit(1);
 		}
@@ -34,6 +32,7 @@ int main(int argc, char const* argv[]) {
 
 	while (!os.Closing()) {
 		os.OSMessageLoop();
+		os.SwapBuffers();
 	}
 
 	return 0;

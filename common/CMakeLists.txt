@@ -17,8 +17,8 @@ set(rpg-common_SOURCES
 
 set(rpg-common_SOURCES ${rpg-common_SOURCES} PARENT_SCOPE) # Add parent scope for test access
 
-file(GLOB_RECURSE rpg-common_HEADERS LIST_DIRECTORIES false ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp)
-set_source_group_property(FILE_LIST ${rpg-common_HEADERS})
+file(GLOB_RECURSE rpg-common_HEADERS RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.hpp)
+set_source_group_property(FILE_LIST ${rpg-common_HEADERS} GROUP_NAME Headers)
 
 set(rpg-common_LIBRARY_NAME "common")
 set(rpg-common_LIBRARY_NAME ${rpg-common_LIBRARY_NAME} PARENT_SCOPE)

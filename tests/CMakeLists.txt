@@ -6,7 +6,7 @@ set(rpg-test_SOURCES
 	sanity_test.cpp
 )
 
-set_source_group_property(FILE_GLOB ${rpg-test_SOURCES} GROUP_NAME Tests)
+set_source_group_property(FILE_LIST ${rpg-test_SOURCES} GROUP_NAME Tests)
 
 set(rpg-test_PROGRAM_NAME "tests")
 
