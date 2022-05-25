@@ -2,6 +2,7 @@
 #include <test.hpp>
 
 #include "constants.hpp"
+#include "game.hpp"
 #include "os/os.hpp"
 #include <spdlog/sinks/stdout_sinks.h>
 
@@ -30,10 +31,51 @@ int main(int argc, char const* argv[]) {
 		}
 	}
 
+	std::mutex m;
+	std::condition_variable cv;
+	os.DetachContext();
+
+	std::thread game_thread([&]() {
+		using rpg::UpdateThread;
+		rpg::Game game;
+		game.AddUpdateThread(UpdateThread::Create(
+				[&](const double delta) {
+					std::stringstream ss;
+					ss << "Render update @ " << delta << std::endl;
+					std::cout << ss.str();
+					os.SwapBuffers();
+				},
+				[&]() { os.MakeCurrent(); }));
+		game.AddUpdateThread(UpdateThread::Create([](const double delta) {
+			std::stringstream ss;
+			ss << "Physics update @ " << delta << std::endl;
+			std::cout << ss.str();
+		}));
+		game.AddUpdateThread(UpdateThread::Create([](const double delta) {
+			std::stringstream ss;
+			ss << "Sound update @ " << delta << std::endl;
+			std::cout << ss.str();
+		}));
+		game.Init();
+		while (!os.Closing()) {
+			game.Update(os.GetDeltaTime());
+
+			std::unique_lock lk(m);
+			cv.notify_one();
+		}
+	});
+
 	while (!os.Closing()) {
+		std::cout << "main_loop\n";
 		os.OSMessageLoop();
-		os.SwapBuffers();
+
+		// Do main thread things here
+
+		std::unique_lock lk(m);
+		cv.wait(lk);
 	}
+
+	game_thread.join();
 
 	return 0;
 }

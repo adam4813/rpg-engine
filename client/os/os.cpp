@@ -20,7 +20,6 @@ extern "C" id objc_msgSend(id self, SEL op, ...);
 extern "C" SEL sel_getUid(const char* str);
 #endif
 
-
 namespace rpg {
 namespace os {
 // Error helper function used by GLFW for error messaging.
@@ -138,7 +137,9 @@ bool OS::InitializeWindow(
 	return true;
 }
 
-void OS::MakeCurrent() const { glfwMakeContextCurrent(this->window); }
+void OS::MakeCurrent() const {
+	glfwMakeContextCurrent(this->window);
+}
 
 void OS::SetWindowAspectRatio(const int numerator, const int denominator) const {
 	glfwSetWindowAspectRatio(this->window, numerator, denominator);
@@ -242,8 +243,8 @@ void OS::On(const std::shared_ptr<MouseMoveEvent> data) {
 }
 
 void OS::On(const std::shared_ptr<MouseLockEvent> data) {
-	this->mouse_locked = data->lock;
-	glfwSetInputMode(this->window, GLFW_CURSOR, this->mouse_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+	mouse_locked = data->lock;
+	glfwSetInputMode(this->window, GLFW_CURSOR, mouse_locked ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 }
 
 void OS::On(const std::shared_ptr<WindowResizedEvent> data) {

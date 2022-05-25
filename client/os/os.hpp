@@ -124,7 +124,7 @@ public:
 	int GetWindowHeight() const;
 
 	/**
-	 * @brief Returns the time since the start of the program.
+	 * @brief Returns the time since the last call.
 	 *
 	 * @return The amount of time that have passed since the last call in seconds.
 	 */

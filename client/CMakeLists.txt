@@ -3,6 +3,7 @@ project(rpg-client)
 set(rpg-client_SOURCES # don't include main.cpp to keep it out of tests
 	${CMAKE_CURRENT_SOURCE_DIR}/os/os.cpp
 	"${CMAKE_CURRENT_SOURCE_DIR}/os/os-event-handler.cpp"
+	${CMAKE_CURRENT_SOURCE_DIR}/game.cpp
 )
 set(rpg-client_SOURCES ${rpg-client_SOURCES} PARENT_SCOPE) # Add parent scope for test access
 
