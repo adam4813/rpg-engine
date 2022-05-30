@@ -1,7 +1,5 @@
 #pragma once
 
-#include "nomovenocopy.hpp"
-
 #include <functional>
 #include <future>
 #include <optional>
@@ -10,38 +8,43 @@
 namespace rpg::util {
 typedef void(updateable)(double);
 
-class UpdateThread : public NoMoveNoCopy {
+class UpdateThread {
 public:
-	static std::unique_ptr<UpdateThread>
-	Create(const std::function<updateable>& update_function,
-		   const std::optional<std::function<void()>>& spawn_function = {}) {
-		auto update_thread = std::make_unique<UpdateThread>();
-		update_thread->update_function = update_function;
-		update_thread->spawn_function = spawn_function;
-		return update_thread;
-	}
+	struct Methods {
+		std::function<updateable> update;
+		std::optional<std::function<void()>> spawn{};
+		std::optional<std::function<void()>> despawn{};
+	};
+
+	explicit UpdateThread(Methods methods) : methods(std::move(methods)) {}
 
 	void StartThread() { this->thread = std::jthread(std::bind_front(&UpdateThread::UpdateLoop, this)); }
 
 	void UpdateLoop(const std::stop_token& stop_token) {
-		if (spawn_function.has_value()) {
-			spawn_function.value()();
+		if (this->methods.spawn.has_value()) {
+			this->methods.spawn.value()();
 		}
 		std::future<double> delta_future = this->delta_promise.get_future();
 		while (!stop_token.stop_requested()) {
+			if (!delta_future.valid()) {
+				continue;
+			}
+			using namespace std::chrono_literals;
 			// 500ms limit status check. In case other threads have become stuck.
-			if (const auto status = delta_future.wait_for(std::chrono::milliseconds(500));
-				status != std::future_status::ready) {
+			if (const auto status = delta_future.wait_for(500ms); status != std::future_status::ready) {
 				continue;
 			}
 
-			update_function(delta_future.get());
+			this->methods.update(delta_future.get());
 
 			this->delta_promise = std::promise<double>();
 			delta_future = delta_promise.get_future();
 			completion_promise.set_value();
-			
+
 			std::this_thread::yield();
+		}
+		if (this->methods.despawn.has_value()) {
+			this->methods.despawn.value()();
 		}
 	}
 
@@ -53,12 +56,9 @@ public:
 	}
 
 private:
-	std::function<updateable> update_function;
-	std::optional<std::function<void()>> spawn_function;
 	std::promise<double> delta_promise;
 	std::promise<void> completion_promise;
 	std::jthread thread;
-	std::mutex m;
-	std::condition_variable cv;
+	Methods methods;
 };
 } // namespace rpg::util

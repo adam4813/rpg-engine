@@ -1,6 +1,7 @@
 project(rpg-client)
 
 set(rpg-client_SOURCES # don't include main.cpp to keep it out of tests
+	${CMAKE_CURRENT_SOURCE_DIR}/graphics/render-system.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/os/os.cpp
 	"${CMAKE_CURRENT_SOURCE_DIR}/os/os-event-handler.cpp"
 	${CMAKE_CURRENT_SOURCE_DIR}/game.cpp

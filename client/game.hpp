@@ -1,7 +1,6 @@
 #pragma once
 
-#include <memory>
-#include <set>
+#include <vector>
 
 #include <util/update-thread.hpp>
 
@@ -9,13 +8,13 @@ namespace rpg {
 using util::UpdateThread;
 class Game {
 public:
-	void Init() const;
+	void Init();
 
-	void Update(double delta) const;
+	void Update(double delta);
 
-	void AddUpdateThread(std::unique_ptr<UpdateThread>);
+	void AddUpdateThread(UpdateThread);
 
 private:
-	std::set<std::unique_ptr<UpdateThread>> update_threads;
+	std::vector<UpdateThread> update_threads;
 };
 } // namespace rpg

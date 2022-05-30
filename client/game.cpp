@@ -1,23 +1,20 @@
 #include "game.hpp"
 
-#include <iostream>
-#include <sstream>
-
 namespace rpg {
-void Game::Init() const {
-	for (const auto& worker : this->update_threads) {
-		worker->StartThread();
+void Game::Init() {
+	for (UpdateThread& worker : this->update_threads) {
+		worker.StartThread();
 	}
 }
 
-void Game::Update(const double delta) const {
-	for (const auto& worker : this->update_threads) {
-		worker->SetDelta(delta);
+void Game::Update(const double delta) {
+	for (UpdateThread& worker : this->update_threads) {
+		worker.SetDelta(delta);
 	}
-	for (const auto& worker : this->update_threads) {
-		worker->AwaitCompletion();
+	for (UpdateThread& worker : this->update_threads) {
+		worker.AwaitCompletion();
 	}
 }
 
-void Game::AddUpdateThread(std::unique_ptr<UpdateThread> thread) { this->update_threads.emplace(std::move(thread)); }
+void Game::AddUpdateThread(UpdateThread thread) { this->update_threads.emplace_back(std::move(thread)); }
 } // namespace rpg

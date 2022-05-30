@@ -100,8 +100,17 @@ public:
 
 	/**
 	 * @brief Swap the front and back buffers. Call after rendering.
+	 * If V-SYNC is on, this will block for swap interval.
+	 *
 	 */
 	void SwapBuffers() const;
+
+	/**
+	 * @brief Returns the refresh rate that active window is on.
+	 *
+	 * @return The monitor's refresh rate.
+	 */
+	int GetMonitorRefreshRate() const;
 
 	/**
 	 * @brief Processes events in the OS message event loop.

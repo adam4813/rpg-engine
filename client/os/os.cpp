@@ -38,10 +38,10 @@ bool OS::InitializeWindow(
 	assert(requested_gl_version.major * 10 + requested_gl_version.minor >= 30);
 	glfwSetErrorCallback(ErrorCallback);
 
-	auto l = spdlog::get("console_log");
+	const auto logger = spdlog::get("console_log");
 	// Initialize the library.
 	if (glfwInit() != GL_TRUE) {
-		l->critical("[OS] Can initialize glfw");
+		logger->critical("[OS] Can initialize glfw");
 		return false;
 	}
 
@@ -68,7 +68,7 @@ bool OS::InitializeWindow(
 
 	if (!this->window) {
 		glfwTerminate();
-		l->critical("[OS] Can't initialize window");
+		logger->critical("[OS] Can't initialize window");
 		return false;
 	}
 
@@ -77,7 +77,7 @@ bool OS::InitializeWindow(
 #ifndef __APPLE__
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK) {
-		l->critical("[OS] Can initialize glew");
+		logger->critical("[OS] Can initialize glew");
 		return false;
 	}
 #endif
@@ -89,7 +89,7 @@ bool OS::InitializeWindow(
 	const auto glsl_minor = std::stoi(glsl_version.substr(glsl_version.find('.', 0) + 1, 1));
 	if (glsl_major < requested_gl_version.major
 		|| (glsl_major == requested_gl_version.major && glsl_minor < requested_gl_version.minor)) {
-		l->critical(
+		logger->critical(
 				"[OS] Initializing OpenGL failed, Shader version must be >= {}.{}0 : GLSL version : {} \n Press "
 				"\"Enter\" to exit\n",
 				requested_gl_version.major,
@@ -99,10 +99,10 @@ bool OS::InitializeWindow(
 		return false;
 	}
 
-	l->info("{} - {}",
+	logger->info("{} - {}",
 			reinterpret_cast<const char*>(glGetString(GL_VENDOR)),
 			reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
-	l->info("GL version : {} GLSL version : {}", gl_version, glsl_version);
+	logger->info("GL version : {} GLSL version : {}", gl_version, glsl_version);
 
 #ifdef __APPLE__
 	// Force retina displays to create a 1x framebuffer so we don't choke our fill rate.
@@ -114,16 +114,16 @@ bool OS::InitializeWindow(
 	// Getting a list of the avail extensions
 	GLint num_extensions = 0;
 	glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-	l->info("Extensions - {}", num_extensions);
-	std::string ext("");
+	logger->info("Extensions - {}", num_extensions);
+	std::string ext;
 	for (GLint e = 0; e < num_extensions; e++) {
 		ext += "[" + std::string(reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, e))) + "] ";
 		if (e != 0 && e % 5 == 0) {
-			l->debug(ext);
+			logger->debug(ext);
 			ext = "";
 		}
 	}
-	l->debug(ext);
+	logger->debug(ext);
 
 	this->event_handler.RegisterHandlers(window);
 
@@ -133,7 +133,7 @@ bool OS::InitializeWindow(
 
 	focused_window = this->window;
 	mouse_locked = false;
-
+	
 	return true;
 }
 
@@ -206,6 +206,14 @@ void OS::Quit() const { glfwSetWindowShouldClose(this->window, true); }
 bool OS::Closing() const { return glfwWindowShouldClose(this->window) > 0; }
 
 void OS::SwapBuffers() const { glfwSwapBuffers(this->window); }
+
+int OS::GetMonitorRefreshRate() const {
+	if (const auto monitor{GetCurrentMonitor(this->window)}; !fullscreen && monitor) {
+		const auto mode = glfwGetVideoMode(monitor);
+		return mode->refreshRate;
+	}
+	return 0;
+}
 
 void OS::OSMessageLoop() {
 	glfwPollEvents();

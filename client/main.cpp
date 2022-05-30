@@ -3,8 +3,11 @@
 
 #include "constants.hpp"
 #include "game.hpp"
+#include "graphics/render-system.hpp"
 #include "os/os.hpp"
 #include <spdlog/sinks/stdout_sinks.h>
+
+using namespace rpg::os;
 
 auto InitializeLogger(const spdlog::level::level_enum log_level) {
 	std::vector<spdlog::sink_ptr> sinks;
@@ -19,7 +22,7 @@ auto InitializeLogger(const spdlog::level::level_enum log_level) {
 int main(int argc, char const* argv[]) {
 	const auto log = InitializeLogger(spdlog::level::debug);
 
-	rpg::os::OS os;
+	OS os;
 
 	using namespace rpg::config;
 	log->info("Initializing OpenGL...");
@@ -31,37 +34,45 @@ int main(int argc, char const* argv[]) {
 		}
 	}
 
-	std::mutex m;
-	std::condition_variable cv;
-	os.DetachContext();
+	std::mutex update_lock_step_cv_mutex;
+	std::condition_variable update_lock_step_cv;
 
-	std::thread game_thread([&]() {
-		using rpg::UpdateThread;
-		rpg::Game game;
-		game.AddUpdateThread(UpdateThread::Create(
-				[&](const double delta) {
-					std::stringstream ss;
-					ss << "Render update @ " << delta << std::endl;
-					std::cout << ss.str();
-					os.SwapBuffers();
-				},
-				[&]() { os.MakeCurrent(); }));
-		game.AddUpdateThread(UpdateThread::Create([](const double delta) {
-			std::stringstream ss;
-			ss << "Physics update @ " << delta << std::endl;
-			std::cout << ss.str();
-		}));
-		game.AddUpdateThread(UpdateThread::Create([](const double delta) {
-			std::stringstream ss;
-			ss << "Sound update @ " << delta << std::endl;
-			std::cout << ss.str();
-		}));
+	std::jthread game_thread([&](const std::stop_token& stop_token) {
+		using namespace rpg;
+		Game game;
+		graphics::RenderSystem render_system;
+		double render_accumulator = 0;
+		const double refresh_rate = os.GetMonitorRefreshRate();
+		OS::DetachContext();
+		game.AddUpdateThread(UpdateThread(
+				{[&](const double delta) {
+					 log->info("Render update with {:0.6f} delta", delta);
+
+					 render_accumulator += delta;
+					 render_system.Update(delta);
+					 if (render_accumulator >= 1.0 / refresh_rate) {
+						 os.SwapBuffers();
+						 log->info("Buffers swapped @ {} hz", refresh_rate);
+						 render_accumulator = 0;
+					 }
+				 },
+				 [&]() {
+					 os.MakeCurrent();
+					 render_system.Setup();
+				 }}));
+		game.AddUpdateThread(UpdateThread({[&](const double delta) {
+			log->info("Physics update with {:0.6f} delta", delta);
+		}}));
+		game.AddUpdateThread(UpdateThread({[&](const double delta) {
+			log->info("Sound update with {:0.6f} delta", delta);
+		}}));
 		game.Init();
-		while (!os.Closing()) {
+		while (!stop_token.stop_requested()) {
 			game.Update(os.GetDeltaTime());
-
-			std::unique_lock lk(m);
-			cv.notify_one();
+			{
+				std::unique_lock lk(update_lock_step_cv_mutex);
+				update_lock_step_cv.notify_one();
+			}
 		}
 	});
 
@@ -70,11 +81,14 @@ int main(int argc, char const* argv[]) {
 		os.OSMessageLoop();
 
 		// Do main thread things here
-
-		std::unique_lock lk(m);
-		cv.wait(lk);
+		{
+			using namespace std::chrono_literals;
+			std::unique_lock lk(update_lock_step_cv_mutex);
+			update_lock_step_cv.wait_for(lk, 500ms);
+		}
 	}
 
+	game_thread.request_stop();
 	game_thread.join();
 
 	return 0;
