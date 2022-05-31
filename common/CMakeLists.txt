@@ -30,10 +30,10 @@ set_warning_flag(TARGET ${rpg-common_LIBRARY_NAME})
 target_link_libraries(
 	${rpg-common_LIBRARY_NAME}
 	PUBLIC
-	Bullet3Common BulletDynamics BulletCollision BulletSoftBody LinearMath
-	protobuf::libprotoc protobuf::libprotobuf protobuf::libprotobuf-lite
-	spdlog::spdlog spdlog::spdlog_header_only
-	asio asio::asio
+	spdlog::spdlog
+	LinearMath Bullet3Common BulletDynamics BulletCollision BulletSoftBody
+	protobuf::libprotobuf
+	asio::asio
 	glm::glm
 )
 

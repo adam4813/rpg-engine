@@ -37,13 +37,14 @@ int main(int argc, char const* argv[]) {
 	std::mutex update_lock_step_cv_mutex;
 	std::condition_variable update_lock_step_cv;
 
+	OS::DetachContext(); // Must detach context in main thread, in order to attach it to other threads.
+
 	std::jthread game_thread([&](const std::stop_token& stop_token) {
 		using namespace rpg;
 		Game game;
 		graphics::RenderSystem render_system;
 		double render_accumulator = 0;
 		const double refresh_rate = os.GetMonitorRefreshRate();
-		OS::DetachContext();
 		game.AddUpdateThread(UpdateThread(
 				{[&](const double delta) {
 					 log->info("Render update with {:0.6f} delta", delta);
