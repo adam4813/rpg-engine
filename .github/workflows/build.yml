@@ -55,29 +55,43 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Switch gcc version (Linux)
+      - name: Switch gcc-${{ env.GCC_VERSION }} version (Linux)
         if: runner.os == 'Linux'
         run: |
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
-      - name: Switch gcc version (MacOS)
+      - name: Switch gcc-${{ env.GCC_VERSION }} version (MacOS)
         if: runner.os == 'MacOS'
         run: |
           alias gcc='gcc-${{ env.GCC_VERSION }}'
+          echo "CC=gcc-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
           alias g++='g++-${{ env.GCC_VERSION }}'
+          echo "CXX=g++-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
         with:
           appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}${{ env.GCC_VERSION }}
           vcpkgGitCommitId: "${{ env.VCPKG_COMMIT_ID }}"
-      - name: Configure cmake and build
+      - name: Configure cmake and build (Window/Linux)
+        #if: runner.os != 'MacOS'
         uses: lukka/run-cmake@v10
         id: run_cmake
         with:
           configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
           buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
           #testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
+      #- name: Configure cmake and build (MacOS)
+      #  if: runner.os == 'MacOS'
+      #  uses: lukka/run-cmake@v10
+      #  id: run_cmake
+      #  with:
+      #    configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
+      #    buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
+      #    #testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
+      #  env:
+      #    CC: gcc
+      #    CXX: g++
       - name: Upload the build artifact
         uses: actions/upload-artifact@v2
         with:
