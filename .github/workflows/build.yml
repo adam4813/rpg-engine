@@ -15,22 +15,42 @@ jobs:
         os:
           [
             windows-latest,
+            windows-2019,
             windows-2016,
+            ubuntu-20.04,
             ubuntu-18.04,
-            ubuntu-16.04,
             macOS-latest,
+            macOS-10.15,
           ]
         arch: [x86, x64]
+        include:
+          - os: windows-latest
+            vcpkgTripletOs: windows
+          - os: windows-2019
+            vcpkgTripletOs: windows
+          - os: windows-2016
+            vcpkgTripletOs: windows
+          - os: ubuntu-20.04
+            vcpkgTripletOs: linux
+          - os: ubuntu-18.04
+            vcpkgTripletOs: linux
+          - os: macOS-latest
+            vcpkgTripletOs: osx
+          - os: macOS-10.15
+            vcpkgTripletOs: osx
         exclude:
+          - os: ubuntu-20.04
+            arch: x86
           - os: ubuntu-18.04
             arch: x86
-          - os: ubuntu-16.04
-            arch: x86
           - os: macOS-latest
+            arch: x86
+          - os: macOS-10.15
             arch: x86
     env:
       buildDir: "${{ github.workspace }}/build"
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
+      VCPKG_COMMIT_ID: "f78f4440df86358575dea65e748a39fdad41eb85"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -42,17 +62,13 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Set gcc-9 on Ubuntu16.04
-        uses: lukka/set-shell-env@v1
-        if: contains( matrix.os, 'ubuntu-16.04')
-        with:
-          CC: gcc-9
-          CXX: g++-9
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
         with:
           appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
+          vcpkgTriplet: ${{ env.VCPKG_DEFAULT_TRIPLET }}
+          vcpkgGitCommitId: "${{ env.VCPKG_COMMIT_ID }}"
           runVcpkgInstall: false
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
@@ -97,10 +113,12 @@ jobs:
         os:
           [
             windows-latest,
+            windows-2019,
             windows-2016,
+            ubuntu-20.04,
             ubuntu-18.04,
-            ubuntu-16.04,
             macOS-latest,
+            macOS-10.15,
           ]
         arch: [x64]
     if: startsWith(github.ref, 'refs/tags/v')
