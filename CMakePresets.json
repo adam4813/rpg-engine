@@ -133,9 +133,21 @@
 			"description": "Vanilla build"
 		},
 		{
+			"name": "x64-linux-release-build",
+			"displayName": "Default",
+			"configurePreset": "x64-linux-release",
+			"description": "Vanilla build"
+		},
+		{
 			"name": "x64-osx-default-build",
 			"displayName": "Default",
 			"configurePreset": "x64-osx-debug",
+			"description": "Vanilla build"
+		},
+		{
+			"name": "x64-osx-release-build",
+			"displayName": "Default",
+			"configurePreset": "x64-osx-release",
 			"description": "Vanilla build"
 		},
 		{
@@ -145,9 +157,21 @@
 			"description": "Vanilla build"
 		},
 		{
+			"name": "x64-windows-release-build",
+			"displayName": "Default",
+			"configurePreset": "x64-windows-release",
+			"description": "Vanilla build"
+		},
+		{
 			"name": "x86-windows-default-build",
 			"displayName": "Default",
 			"configurePreset": "x86-windows-debug",
+			"description": "Vanilla build"
+		},
+		{
+			"name": "x86-windows-release-build",
+			"displayName": "Default",
+			"configurePreset": "x86-windows-release",
 			"description": "Vanilla build"
 		},
 		{

@@ -75,7 +75,7 @@ jobs:
         id: run_cmake
         with:
           configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
-          buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-default-build
+          buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
           testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
       - name: Upload the build artifact
         uses: actions/upload-artifact@v2
