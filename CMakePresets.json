@@ -72,10 +72,6 @@
 			"displayName": "Linux Debug",
 			"description": "Sets GCC",
 			"inherits": "base",
-			"cacheVariables": {
-				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++"
-			},
 			"condition": {
 				"type": "equals",
 				"lhs": "${hostSystemName}",
@@ -96,10 +92,6 @@
 			"displayName": "OSX Debug",
 			"description": "Sets GCC",
 			"inherits": "base",
-			"cacheVariables": {
-				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++"
-			},
 			"condition": {
 				"type": "equals",
 				"lhs": "${hostSystemName}",
@@ -179,7 +171,7 @@
 			"displayName": "Verbose Build",
 			"description": "Passes -v to Ninja",
 			"configurePreset": "x64-linux-debug",
-			"nativeToolOptions": [ "-v" ]
+			"nativeToolOptions": ["-v"]
 		},
 		{
 			"name": "verbose-build-windows",
