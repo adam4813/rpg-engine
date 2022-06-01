@@ -1,0 +1,4 @@
+site_name: RPG
+theme: readthedocs
+markdown_extensions:
+  - admonition
