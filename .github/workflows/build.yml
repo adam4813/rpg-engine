@@ -56,11 +56,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
       - name: Set gcc-${{ env.GCC_VERSION }} on Linux/MacOS
-        uses: lukka/set-shell-env@v1
         if: runner.os != 'Windows'
-        with:
-          CC: gcc-${{ env.GCC_VERSION }}
-          CXX: g++-${{ env.GCC_VERSION }}
+        run: |
+          echo "CC=gcc-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
+          echo "CXX=g++-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
