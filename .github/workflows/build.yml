@@ -71,8 +71,9 @@ jobs:
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
         with:
-          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}${{ env.GCC_VERSION }}
+          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ env.CXX }}
           vcpkgGitCommitId: "${{ env.VCPKG_COMMIT_ID }}"
+          doNotCache: ${{ runner.os == 'MacOS' }}
       - name: Configure cmake and build (Window/Linux)
         #if: runner.os != 'MacOS'
         uses: lukka/run-cmake@v10
