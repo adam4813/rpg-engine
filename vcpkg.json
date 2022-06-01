@@ -15,5 +15,6 @@
 		"spdlog",
 		"gtest"
 	],
-	"supports": "(windows & x86) | (windows & x64) | (linux & x64) | (osx & x64)"
+	"supports": "(windows & x86) | (windows & x64) | (linux & x64) | (osx & x64)",
+	"builtin-baseline": "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
 }
