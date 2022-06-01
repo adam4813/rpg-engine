@@ -76,13 +76,25 @@ jobs:
           appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ env.CXX }}
           vcpkgGitCommitId: "${{ env.VCPKG_COMMIT_ID }}"
           doNotCache: ${{ runner.os == 'MacOS' }}
-      - name: Configure cmake and build
+      - name: Configure cmake and build (Linux/Windows)
         uses: lukka/run-cmake@v10
+        if: runner.os != 'MacOS'
         id: run_cmake
         with:
           configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
           buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
           #testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
+      - name: Configure cmake and build (MacOS)
+        uses: lukka/run-cmake@v10
+        if: runner.os == 'MacOS'
+        id: run_cmake
+        with:
+          configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
+          buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
+          #testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
+        env:
+          CC: clang
+          CXX: clang++
       - name: Upload the build artifact
         uses: actions/upload-artifact@v2
         with:
