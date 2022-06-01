@@ -33,8 +33,8 @@ jobs:
             vcpkgTripletOs: linux
           - os: ubuntu-18.04
             vcpkgTripletOs: linux
-          - os: macOS-latest
-            vcpkgTripletOs: osx
+          #- os: macOS-latest
+          #  vcpkgTripletOs: osx
         exclude:
           - os: ubuntu-20.04
             arch: x86
@@ -46,7 +46,7 @@ jobs:
       buildDir: "${{ github.workspace }}/build"
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
       VCPKG_COMMIT_ID: "f78f4440df86358575dea65e748a39fdad41eb85"
-      GCC_VERSION: 9
+      GCC_VERSION: 11
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -58,12 +58,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Set gcc-9 on Ubuntu18.04
+      - name: Set gcc-${{ env.GCC_VERSION }} on Linux
         uses: lukka/set-shell-env@v1
-        if: contains( matrix.os, 'ubuntu-18.04')
+        if: runner.os == 'Linux'
         with:
-          CC: gcc-9
-          CXX: g++-9
+          CC: gcc-${{ env.GCC_VERSION }}
+          CXX: g++-${{ env.GCC_VERSION }}
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
@@ -119,8 +119,7 @@ jobs:
             windows-2016,
             ubuntu-20.04,
             ubuntu-18.04,
-            macOS-latest,
-            macOS-10.15,
+            #macOS-latest,
           ]
         arch: [x64]
     if: startsWith(github.ref, 'refs/tags/v')
