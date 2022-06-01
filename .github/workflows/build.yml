@@ -43,7 +43,7 @@ jobs:
       buildDir: "${{ github.workspace }}/build"
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
       VCPKG_COMMIT_ID: "f78f4440df86358575dea65e748a39fdad41eb85"
-      GCC_VERSION: 11
+      GCC_VERSION: 10
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2

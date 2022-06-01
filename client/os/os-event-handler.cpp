@@ -7,7 +7,6 @@
 #include <GLFW/glfw3.h>
 #include <algorithm>
 
-
 namespace rpg::os {
 using events::EventDispatcher;
 using namespace events::os;
@@ -61,11 +60,11 @@ void OSEventHandler::RegisterHandlers(GLFWwindow* target_window) {
 }
 
 void OSEventHandler::DispatchKeyboardEvent(const int key, const int scancode, const int action, const int mods) const {
-	using enum KeyboardEvent::KEY_ACTION;
-	const auto key_event = std::make_shared<KeyboardEvent>(KeyboardEvent{key, scancode, KEY_DOWN, mods});
+	const auto key_event =
+			std::make_shared<KeyboardEvent>(KeyboardEvent{key, scancode, KeyboardEvent::KEY_ACTION::KEY_DOWN, mods});
 	switch (action) {
-	case GLFW_REPEAT: key_event->action = KEY_REPEAT; break;
-	case GLFW_RELEASE: key_event->action = KEY_UP; break;
+	case GLFW_REPEAT: key_event->action = KeyboardEvent::KEY_ACTION::KEY_REPEAT; break;
+	case GLFW_RELEASE: key_event->action = KeyboardEvent::KEY_ACTION::KEY_UP; break;
 	default:;
 	}
 
@@ -113,16 +112,14 @@ void OSEventHandler::DispatchMouseScrollEvent(const double x_offset, const doubl
 void OSEventHandler::DispatchMouseButtonEvent(const int button, const int action, const int) const {
 	const auto mouse_button_event = std::make_shared<MouseBtnEvent>();
 	switch (action) {
-		using enum MouseBtnEvent::MOUSE_BTN_ACTION;
-	case GLFW_PRESS: mouse_button_event->action = DOWN; break;
-	case GLFW_RELEASE: mouse_button_event->action = UP; break;
+	case GLFW_PRESS: mouse_button_event->action = MouseBtnEvent::MOUSE_BTN_ACTION::DOWN; break;
+	case GLFW_RELEASE: mouse_button_event->action = MouseBtnEvent::MOUSE_BTN_ACTION::UP; break;
 	default: return;
 	}
 	switch (button) {
-		using enum MouseBtnEvent::MOUSE_BTN;
-	case GLFW_MOUSE_BUTTON_LEFT: mouse_button_event->button = LEFT; break;
-	case GLFW_MOUSE_BUTTON_RIGHT: mouse_button_event->button = RIGHT; break;
-	case GLFW_MOUSE_BUTTON_MIDDLE: mouse_button_event->button = MIDDLE; break;
+	case GLFW_MOUSE_BUTTON_LEFT: mouse_button_event->button = MouseBtnEvent::MOUSE_BTN::LEFT; break;
+	case GLFW_MOUSE_BUTTON_RIGHT: mouse_button_event->button = MouseBtnEvent::MOUSE_BTN::RIGHT; break;
+	case GLFW_MOUSE_BUTTON_MIDDLE: mouse_button_event->button = MouseBtnEvent::MOUSE_BTN::MIDDLE; break;
 	default:;
 	}
 	EventDispatcher<MouseBtnEvent>::Emit(mouse_button_event);
