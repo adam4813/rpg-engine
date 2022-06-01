@@ -63,11 +63,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Configure using CMake (!Windows)
-        if: runner.os != 'Windows'
-        env:
-          CC: gcc-${{ env.GCC_VERSION }}
-          CXX: g++-${{ env.GCC_VERSION }}
+      - name: Set gcc-9 on Ubuntu18.04
+        uses: lukka/set-shell-env@v1
+        if: contains( matrix.os, 'ubuntu-18.04')
+        with:
+          CC: gcc-9
+          CXX: g++-9
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
