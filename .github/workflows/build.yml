@@ -55,16 +55,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Set gcc-${{ env.GCC_VERSION }} on Linux/MacOS
-        if: runner.os != 'Windows'
-        run: |
-          echo "CC=gcc-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
-          echo "CXX=g++-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
         with:
-          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
+          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}${{ env.GCC_VERSION }}
           vcpkgGitCommitId: "${{ env.VCPKG_COMMIT_ID }}"
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
@@ -73,6 +68,9 @@ jobs:
           configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
           buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
           #testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
+        env:
+          CC: gcc-${{ env.GCC_VERSION }}
+          CXX: g++-${{ env.GCC_VERSION }}
       - name: Upload the build artifact
         uses: actions/upload-artifact@v2
         with:
