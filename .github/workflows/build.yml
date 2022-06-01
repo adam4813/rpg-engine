@@ -66,9 +66,9 @@ jobs:
           GCC_VERSION: 11
         run: |
           alias gcc='gcc-${{ env.GCC_VERSION }}'
-          echo "CC=gcc-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
+          echo "CC=clang" >> $GITHUB_ENV
           alias g++='g++-${{ env.GCC_VERSION }}'
-          echo "CXX=g++-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
+          echo "CXX=clang" >> $GITHUB_ENV
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
