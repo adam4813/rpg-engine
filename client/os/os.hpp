@@ -1,11 +1,11 @@
 #pragma once
 
 #ifndef __APPLE__
-#include <gl/glew.h>
+#include <GL/glew.h>
 #endif
 
 #ifdef WIN32
-#include <gl/wglew.h>
+#include <GL/wglew.h>
 #endif
 
 #ifdef __APPLE__

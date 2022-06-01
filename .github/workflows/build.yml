@@ -19,8 +19,7 @@ jobs:
             windows-2016,
             ubuntu-20.04,
             ubuntu-18.04,
-            macOS-latest,
-            macOS-10.15,
+            #macOS-latest,
           ]
         arch: [x86, x64]
         include:
@@ -36,16 +35,12 @@ jobs:
             vcpkgTripletOs: linux
           - os: macOS-latest
             vcpkgTripletOs: osx
-          - os: macOS-10.15
-            vcpkgTripletOs: osx
         exclude:
           - os: ubuntu-20.04
             arch: x86
           - os: ubuntu-18.04
             arch: x86
           - os: macOS-latest
-            arch: x86
-          - os: macOS-10.15
             arch: x86
     env:
       buildDir: "${{ github.workspace }}/build"
@@ -83,7 +78,7 @@ jobs:
         with:
           configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
           buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
-          testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
+          #testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
       - name: Upload the build artifact
         uses: actions/upload-artifact@v2
         with:
