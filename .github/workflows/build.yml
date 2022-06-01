@@ -55,11 +55,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Switch gcc version (Linux/MacOS)
-        if: runner.os != 'Windows'
+      - name: Switch gcc version (Linux)
+        if: runner.os == 'Linux'
         run: |
           sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
+      - name: Switch gcc version (MacOS)
+        if: runner.os == 'MacOS'
+        run: |
+          alias gcc='gcc-${{ env.GCC_VERSION }'
+          alias g++='g++-${{ env.GCC_VERSION }'
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         id: run_vcpkg
