@@ -87,7 +87,7 @@ jobs:
       - name: Configure cmake and build (MacOS)
         uses: lukka/run-cmake@v10
         if: runner.os == 'MacOS'
-        id: run_cmake
+        id: run_cmake_macos
         with:
           configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
           buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
