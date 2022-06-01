@@ -21,22 +21,6 @@ jobs:
             macOS-latest,
           ]
         arch: [x86, x64]
-        include:
-          - os: windows-latest
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
-            vcpkgTripletOs: windows
-          - os: windows-2016
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
-            vcpkgTripletOs: windows
-          - os: ubuntu-18.04
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
-            vcpkgTripletOs: linux
-          - os: ubuntu-16.04
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
-            vcpkgTripletOs: linux
-          - os: macOS-latest
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
-            vcpkgTripletOs: osx
         exclude:
           - os: ubuntu-18.04
             arch: x86
@@ -66,16 +50,15 @@ jobs:
           CXX: g++-9
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
-        id: runvcpkg
+        id: run_vcpkg
         with:
           appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
-          vcpkgTriplet: ${{ env.VCPKG_DEFAULT_TRIPLET }}
-          vcpkgGitCommitId: "${{ matrix.vcpkgCommitId }}"
+          runVcpkgInstall: false
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
-        id: runcmake_cmd
+        id: run_cmake
         with:
-          configPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
+          configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
           buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-default-build
           testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
       - name: Upload the build artifact
