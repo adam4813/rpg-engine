@@ -62,6 +62,8 @@ jobs:
           sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
       - name: Switch gcc-${{ env.GCC_VERSION }} version (MacOS)
         if: runner.os == 'MacOS'
+        env:
+          GCC_VERSION: 11
         run: |
           alias gcc='gcc-${{ env.GCC_VERSION }}'
           echo "CC=gcc-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
@@ -74,25 +76,13 @@ jobs:
           appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ env.CXX }}
           vcpkgGitCommitId: "${{ env.VCPKG_COMMIT_ID }}"
           doNotCache: ${{ runner.os == 'MacOS' }}
-      - name: Configure cmake and build (Window/Linux)
-        #if: runner.os != 'MacOS'
+      - name: Configure cmake and build
         uses: lukka/run-cmake@v10
         id: run_cmake
         with:
           configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
           buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
           #testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
-      #- name: Configure cmake and build (MacOS)
-      #  if: runner.os == 'MacOS'
-      #  uses: lukka/run-cmake@v10
-      #  id: run_cmake
-      #  with:
-      #    configurePreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
-      #    buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release-build
-      #    #testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
-      #  env:
-      #    CC: gcc
-      #    CXX: g++
       - name: Upload the build artifact
         uses: actions/upload-artifact@v2
         with:
