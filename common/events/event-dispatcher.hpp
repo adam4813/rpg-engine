@@ -18,7 +18,6 @@ public:
 	*
 	* @param entity_id ID of the entity to subscribe to.
 	* @param subscriber The subscriber to add.
-	* @return void
 	*/
 	static void Subscribe(const eid entity_id, EventQueue<T>* subscriber) {
 		auto subs = subscribers.find(entity_id);
@@ -37,16 +36,14 @@ public:
 	* @brief Subscribes to be notified of events for all entity IDs.
 	*
 	* @param subscriber The subscriber to add.
-	* @return void
 	*/
 	static void Subscribe(EventQueue<T>* subscriber) { Subscribe(0, subscriber); }
 
 	/**
-	* @brief Unsubscribes to notification of events.
+	* @brief Unsubscribe to notification of events.
 	*
 	* @param entity_id ID of the entity to unsubscribe from.
 	* @param subscriber The subscriber to remove.
-	* @return void
 	*/
 	static void Unsubscribe(const eid entity_id, EventQueue<T>* subscriber) {
 		if (subscribers.contains(entity_id)) {
@@ -55,10 +52,9 @@ public:
 	}
 
 	/**
-	* @brief Unsubscribes to notification of events.
+	* @brief Unsubscribe to notification of events.
 	*
 	* @param subscriber The subscriber to remove.
-	* @return void
 	*/
 	static void Unsubscribe(EventQueue<T>* subscriber) { Unsubscribe(0, subscriber); }
 
@@ -85,7 +81,6 @@ public:
 	static void Emit(std::shared_ptr<T> data) { Emit(0, data); }
 
 private:
-	inline static std::map<eid, std::list<EventQueue<T>*>> subscribers{
-			{std::make_pair(0, std::list<EventQueue<T>*>())}};
+	inline static std::map<eid, std::list<EventQueue<T>*>> subscribers{std::make_pair(0, std::list<EventQueue<T>*>())};
 };
 } // namespace rpg::events

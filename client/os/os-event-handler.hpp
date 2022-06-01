@@ -20,9 +20,9 @@ public:
 	/**
 	* @brief Dispatches a character event.
 	*
-	* @param[in] uchar The Unicode character key code.
+	* @param[in] unicode_char The Unicode character key code.
 	*/
-	void DispatchCharacterEvent(unsigned int uchar) const;
+	void DispatchCharacterEvent(unsigned int unicode_char) const;
 
 	/**
 	* @brief Dispatches mouse movement events.

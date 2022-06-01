@@ -61,12 +61,10 @@ int main(int argc, char const* argv[]) {
 					 os.MakeCurrent();
 					 render_system.Setup();
 				 }}));
-		game.AddUpdateThread(UpdateThread({[&](const double delta) {
-			log->info("Physics update with {:0.6f} delta", delta);
-		}}));
-		game.AddUpdateThread(UpdateThread({[&](const double delta) {
-			log->info("Sound update with {:0.6f} delta", delta);
-		}}));
+		game.AddUpdateThread(
+				UpdateThread({[&](const double delta) { log->info("Physics update with {:0.6f} delta", delta); }}));
+		game.AddUpdateThread(
+				UpdateThread({[&](const double delta) { log->info("Sound update with {:0.6f} delta", delta); }}));
 		game.Init();
 		while (!stop_token.stop_requested()) {
 			game.Update(os.GetDeltaTime());

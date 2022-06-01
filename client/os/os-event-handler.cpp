@@ -72,9 +72,9 @@ void OSEventHandler::DispatchKeyboardEvent(const int key, const int scancode, co
 	EventDispatcher<KeyboardEvent>::Emit(key_event);
 }
 
-void OSEventHandler::DispatchCharacterEvent(const unsigned int uchar) const {
+void OSEventHandler::DispatchCharacterEvent(const unsigned int unicode_char) const {
 	const auto key_event = std::make_shared<KeyboardEvent>(
-			KeyboardEvent{static_cast<const int>(uchar), 0, KeyboardEvent::KEY_ACTION::KEY_CHAR, 0});
+			KeyboardEvent{static_cast<const int>(unicode_char), 0, KeyboardEvent::KEY_ACTION::KEY_CHAR, 0});
 	EventDispatcher<KeyboardEvent>::Emit(key_event);
 }
 
@@ -131,7 +131,7 @@ void OSEventHandler::DispatchMouseButtonEvent(const int button, const int action
 void OSEventHandler::DispatchFileDropEvent(const int count, const char** paths) const {
 	const auto fd_event = std::make_shared<FileDropEvent>();
 	for (int i = 0; i < count; ++i) {
-		fd_event->filenames.push_back(paths[i]);
+		fd_event->filenames.emplace_back(paths[i]);
 		while (fd_event->filenames[i].find("\\") != std::string::npos) {
 			fd_event->filenames[i].replace(fd_event->filenames[i].find("\\"), 1, "/");
 		}
