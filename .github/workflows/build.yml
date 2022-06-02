@@ -20,20 +20,25 @@ jobs:
             ubuntu-18.04,
             macOS-latest,
           ]
-        arch: [x64]
+        arch: [x86, x64]
         include:
           - os: windows-latest
             vcpkgTripletOs: windows
-            arch: x86
           - os: windows-2019
             vcpkgTripletOs: windows
-            arch: x86
           - os: ubuntu-20.04
             vcpkgTripletOs: linux
           - os: ubuntu-18.04
             vcpkgTripletOs: linux
           - os: macOS-latest
             vcpkgTripletOs: osx
+        exclude:
+          - os: ubuntu-20.04
+            arch: x86
+          - os: ubuntu-18.04
+            arch: x86
+          - os: macOS-latest
+            arch: x86
     env:
       buildDir: ${{ github.workspace }}/out/build/${{ matrix.arch }}-release
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
