@@ -1,28 +1,37 @@
 # RPG Game
+Moderm (C++17/20) game engine for learning.
 
-## Setup
-All platforms will need to have the following installed
-Dependencies:
+
+## Minimum Compiler Versions
+The following [compilers support](https://en.cppreference.com/w/cpp/compiler_support) the few C++20 features that are being used
+* GNU (gcc/g++) - 10
+* Clang - 13
+* AppleClang - 13.1.6 (XCode 13.3) **Requires MacOS 12**
+* MSVC - 19.25 (Visual Studio 2019 16.5)
+
+### C++20 Features of Note
+* `std::jthread` and `std::stop_token`
+* `std::bind_front`
+
+## Dependencies:
 * [cmake](https://cmake.org/)
 * [vcpkg](https://github.com/microsoft/vcpkg)
-
-### Windows
-Dependencies:
 * [ninja](https://github.com/ninja-build/ninja/wiki/Pre-built-Ninja-packages) ***Optional***
 
-Supported editor(s)
+### Linux / WSL
+Dependencies:
+* `gcc10 g++10` or `clang-13`
+* `build-essentials pkg-config tar curl zip unzip gdb`
+* `libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full`
+
+## Supported editor(s)
 * Visual Studio
 * Visual Studio (CMake folder mode)
   * Change Tools -> Options -> CMake -> General and enable "Prefer using CMake Presets..."
 * Visual Studio Code
-  * CTest may not discover tests
-
-### Linux / WSL
-Dependencies:
-* `gcc9 g++9`
-* `build-essentials pkg-config tar curl zip unzip gdb`
-* [ninja](https://github.com/ninja-build/ninja/wiki/Pre-built-Ninja-packages)
-* `libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full`
+  * On Windows you may need to add the CMake bin directory to path, for CTest to work.
+* CLion
+  * Not tested, but CMake folder mode should work as expected
 
 
 ## Documentation

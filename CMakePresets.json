@@ -20,32 +20,27 @@
 			}
 		},
 		{
-			"name": "x64-windows-debug",
+			"name": "x64-debug",
 			"displayName": "x64 Debug",
 			"description": "Sets debug build type and x64 arch",
 			"inherits": "base",
 			"architecture": {
 				"value": "x64",
 				"strategy": "external"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
 			}
 		},
 		{
-			"name": "x64-windows-release",
+			"name": "x64-release",
 			"displayName": "x64 Release",
 			"description": "Sets release build type",
-			"inherits": "x64-windows-debug",
+			"inherits": "x64-debug",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Release"
 			}
 		},
 		{
-			"name": "x86-windows-debug",
-			"displayName": "x86 Debug ",
+			"name": "x86-debug",
+			"displayName": "x86 Debug",
 			"description": "Sets debug build type and x86 arch",
 			"inherits": "base",
 			"architecture": {
@@ -59,58 +54,10 @@
 			}
 		},
 		{
-			"name": "x86-windows-release",
+			"name": "x86-release",
 			"displayName": "x86 Release",
 			"description": "Sets release build type",
-			"inherits": "x86-windows-debug",
-			"cacheVariables": {
-				"CMAKE_BUILD_TYPE": "Release"
-			}
-		},
-		{
-			"name": "x64-linux-debug",
-			"displayName": "Linux Debug",
-			"description": "Sets GCC",
-			"inherits": "base",
-			"cacheVariables": {
-				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Linux"
-			}
-		},
-		{
-			"name": "x64-linux-release",
-			"displayName": "Linux Release",
-			"description": "Sets release build type",
-			"inherits": "x64-linux-debug",
-			"cacheVariables": {
-				"CMAKE_BUILD_TYPE": "Release"
-			}
-		},
-		{
-			"name": "x64-osx-debug",
-			"displayName": "OSX Debug",
-			"description": "Sets GCC",
-			"inherits": "base",
-			"cacheVariables": {
-				"CMAKE_C_COMPILER": "gcc",
-				"CMAKE_CXX_COMPILER": "g++"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Darwin"
-			}
-		},
-		{
-			"name": "x64-osx-release",
-			"displayName": "OSX Release",
-			"description": "Sets release build type",
-			"inherits": "x64-osx-debug",
+			"inherits": "x86-debug",
 			"cacheVariables": {
 				"CMAKE_BUILD_TYPE": "Release"
 			}
@@ -127,41 +74,35 @@
 	],
 	"buildPresets": [
 		{
-			"name": "x64-linux-default-build",
+			"name": "x64-debug-build",
 			"displayName": "Default",
-			"configurePreset": "x64-linux-debug",
+			"configurePreset": "x64-debug",
 			"description": "Vanilla build"
 		},
 		{
-			"name": "x64-osx-default-build",
+			"name": "x64-release-build",
 			"displayName": "Default",
-			"configurePreset": "x64-osx-debug",
+			"configurePreset": "x64-release",
 			"description": "Vanilla build"
 		},
 		{
-			"name": "x64-windows-default-build",
+			"name": "x86-debug-build",
 			"displayName": "Default",
-			"configurePreset": "x64-windows-debug",
+			"configurePreset": "x86-debug",
 			"description": "Vanilla build"
 		},
 		{
-			"name": "x86-windows-default-build",
+			"name": "x86-release-build",
 			"displayName": "Default",
-			"configurePreset": "x86-windows-debug",
+			"configurePreset": "x86-release",
 			"description": "Vanilla build"
 		},
 		{
-			"name": "verbose-build-linux",
+			"name": "verbose-build",
 			"displayName": "Verbose Build",
 			"description": "Passes -v to Ninja",
-			"configurePreset": "x64-linux-debug",
-			"nativeToolOptions": [ "-v" ]
-		},
-		{
-			"name": "verbose-build-windows",
-			"displayName": "Verbose Build",
-			"configurePreset": "x64-windows-debug",
-			"inherits": "verbose-build-linux"
+			"configurePreset": "x64-debug",
+			"nativeToolOptions": ["-v"]
 		},
 		{
 			"name": "tests",
@@ -172,15 +113,7 @@
 	],
 	"testPresets": [
 		{
-			"name": "core-test-x64-linux",
-			"description": "Enable output on failure",
-			"configurePreset": "tests",
-			"output": {
-				"outputOnFailure": true
-			}
-		},
-		{
-			"name": "core-test-x64-windows",
+			"name": "test",
 			"description": "Enable output on failure",
 			"configurePreset": "tests",
 			"output": {
@@ -189,19 +122,6 @@
 			"execution": {
 				"noTestsAction": "error"
 			}
-		},
-		{
-			"name": "core-test-x86-windows",
-			"inherits": "core-test-x64-windows",
-			"configurePreset": "tests",
-			"execution": {
-				"noTestsAction": "error"
-			}
-		},
-		{
-			"name": "core-test-x64-osx",
-			"inherits": "core-test-x64-linux",
-			"configurePreset": "tests"
 		}
 	]
 }

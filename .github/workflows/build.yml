@@ -15,38 +15,35 @@ jobs:
         os:
           [
             windows-latest,
-            windows-2016,
+            windows-2019,
+            ubuntu-20.04,
             ubuntu-18.04,
-            ubuntu-16.04,
-            macOS-latest,
+            #macOS-latest,
           ]
         arch: [x86, x64]
         include:
           - os: windows-latest
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
             vcpkgTripletOs: windows
-          - os: windows-2016
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
+          - os: windows-2019
             vcpkgTripletOs: windows
+          - os: ubuntu-20.04
+            vcpkgTripletOs: linux
           - os: ubuntu-18.04
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
             vcpkgTripletOs: linux
-          - os: ubuntu-16.04
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
-            vcpkgTripletOs: linux
-          - os: macOS-latest
-            vcpkgCommitId: "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
-            vcpkgTripletOs: osx
+          #- os: macOS-latest
+          #  vcpkgTripletOs: osx
         exclude:
-          - os: ubuntu-18.04
+          - os: ubuntu-20.04
             arch: x86
-          - os: ubuntu-16.04
+          - os: ubuntu-18.04
             arch: x86
           - os: macOS-latest
             arch: x86
     env:
-      buildDir: "${{ github.workspace }}/build"
+      buildDir: ${{ github.workspace }}/out/build/${{ matrix.arch }}-release
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
+      VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
+      GCC_VERSION: 10
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -58,30 +55,31 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Set gcc-9 on Ubuntu16.04
-        uses: lukka/set-shell-env@v1
-        if: contains( matrix.os, 'ubuntu-16.04')
-        with:
-          CC: gcc-9
-          CXX: g++-9
+      - name: Switch gcc version (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
+      - name: Switch gcc version (MacOS)
+        if: runner.os == 'MacOS'
+        run: |
+          alias gcc='gcc-${{ env.GCC_VERSION }}'
+          alias g++='g++-${{ env.GCC_VERSION }}'
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
-        id: runvcpkg
         with:
           appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
-          vcpkgTriplet: ${{ env.VCPKG_DEFAULT_TRIPLET }}
-          vcpkgGitCommitId: "${{ matrix.vcpkgCommitId }}"
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
-        id: runcmake_cmd
         with:
-          configPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-release
-          buildPreset: ${{ env.VCPKG_DEFAULT_TRIPLET }}-default-build
-          testPreset: core-test-${{ env.VCPKG_DEFAULT_TRIPLET }}
+          configurePreset: ${{ matrix.arch }}-release
+          buildPreset: ${{ matrix.arch }}-release-build
+          #testPreset: test
       - name: Upload the build artifact
         uses: actions/upload-artifact@v2
         with:
-          name: "${{ matrix.os }}"
+          name: ${{ matrix.os }}
           path: |
             ${{ env.buildDir }}/client/rpg-client*
             ${{ env.buildDir }}/client/*.dll
@@ -96,12 +94,11 @@ jobs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
     steps:
       - name: Create Release
-        id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: "${{ github.ref }}"
+          tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           draft: false
           prerelease: false
@@ -111,13 +108,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          [
+        os: [
             windows-latest,
-            windows-2016,
+            windows-2019,
+            ubuntu-20.04,
             ubuntu-18.04,
-            ubuntu-16.04,
-            macOS-latest,
+            #macOS-latest,
           ]
         arch: [x64]
     if: startsWith(github.ref, 'refs/tags/v')
@@ -126,13 +122,12 @@ jobs:
       - name: Download a single artifact
         uses: actions/download-artifact@v2
         with:
-          name: "${{ matrix.os }}"
+          name: ${{ matrix.os }}
       - name: Package release
         run: |
           zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.buildDir }}/client
           zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.buildDir }}/server
       - name: Upload Release Asset
-        id: upload-release-asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
