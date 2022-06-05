@@ -98,8 +98,8 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
-      - name: LS files system
-        run: ls
+      - name: Display files system
+        run: ls -R
       - name: Package release
         run: |
           for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/client/RelWithDebInfo"; done
