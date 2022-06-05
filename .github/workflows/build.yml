@@ -31,8 +31,8 @@ jobs:
             vcpkgTripletOs: linux
           - os: ubuntu-18.04
             vcpkgTripletOs: linux
-          - os: macOS-latest
-            vcpkgTripletOs: osx
+          #- os: macOS-latest
+          #  vcpkgTripletOs: osx
         exclude:
           - os: ubuntu-20.04
             arch: x86
@@ -41,7 +41,6 @@ jobs:
           - os: macOS-latest
             arch: x86
           - os: macOS-latest
-            arch: x64
     runs-on: ${{ matrix.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
