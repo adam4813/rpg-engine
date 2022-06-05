@@ -30,12 +30,11 @@ jobs:
           - os: macOS-latest
           - os: macOS-latest
             arch: x86
+    runs-on: ${{ matrix.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
-      BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
       GCC_VERSION: 10
-    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -59,73 +58,45 @@ jobs:
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         with:
-          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
+          appendedCacheKey: ${{ matrix.os}}-${{ matrix.arch }}
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
-          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.BUILD_CONFIG }}
-          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.BUILD_CONFIG }}
-      - name: Upload the build artifact
-        if: matrix.BUILD_CONFIG == "release"
-        uses: actions/upload-artifact@v2
+          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_config }}
+          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_config }}
+      - name: Upload the build artifact (Release only)
+        if: matrix.build_config == "release"
+        uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}
           path: |
-            ${{ env.BUILD_DIR }}/client/rpg-client*
-            ${{ env.BUILD_DIR }}/client/*.dll
-            ${{ env.BUILD_DIR }}/server/rpg-server*
+            ${{ env.CLIENT_BUILD_DIR }}/Release/rpg-client*
+            ${{ env.CLIENT_BUILD_DIR }}/Release/*.dll
+            ${{ env.SERVER_BUILD_DIR }}/Release/rpg-server*
           if-no-files-found: ignore
-  prepublish:
-    runs-on: ubuntu-latest
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-    name: Create Release
-    outputs:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-    steps:
-      - name: Create Release
-        uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
-          draft: false
-          prerelease: false
+          CLIENT_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/client
+          SERVER_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/server
   publish:
     runs-on: ubuntu-latest
-    needs: prepublish
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          [
-            windows-latest,
-            windows-2019,
-            ubuntu-20.04,
-            ubuntu-18.04,
-            macOS-latest,
-          ]
-        arch: [x64]
     if: startsWith(github.ref, 'refs/tags/v')
     name: Upload Release Asset(s)
     steps:
-      - name: Download a single artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ matrix.os }}
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+      - name: LS files system
+        run: ls
       - name: Package release
         run: |
-          zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.BUILD_DIR }}/client
-          zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.BUILD_DIR }}/server
+          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/client/Release"; done
+          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/server/Release"; done
       - name: Upload Release Asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ needs.prepublish.outputs.upload_url }}
-          asset_path: "./${{ matrix.os }}.zip"
-          asset_name: "${{ matrix.os }}.zip"
-          asset_content_type: application/zip
+          tag_name: ${{ github.ref }}
+          name: Release ${{ github.ref }}
+          files: *.zip
+          draft: false
+          prerelease: false
