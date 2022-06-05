@@ -39,8 +39,8 @@ jobs:
           - os: ubuntu-18.04
             arch: x86
           - os: macOS-latest
-            arch: x86
           - os: macOS-latest
+            arch: x86
     runs-on: ${{ matrix.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
@@ -82,7 +82,7 @@ jobs:
         if: matrix.build_config == 'release'
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.os }}
+          name: ${{ matrix.os }}-${{ matrix.arch }}
           path: |
             ${{ env.CLIENT_BUILD_DIR }}/RelWithDebInfo/rpg-client*
             ${{ env.CLIENT_BUILD_DIR }}/RelWithDebInfo/*.dll
