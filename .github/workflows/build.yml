@@ -67,7 +67,7 @@ jobs:
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_config }}
           #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_config }}
       - name: Upload the build artifact (Release only)
-        if: matrix.build_config == "release"
+        if: matrix.build_config == 'release'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}
