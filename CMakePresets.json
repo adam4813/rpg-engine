@@ -7,66 +7,23 @@
 	},
 	"configurePresets": [
 		{
-			"name": "base",
-			"hidden": true,
-			"description": "Sets Ninja generator, compilers, x64 architecture, build and install directory, debug build type",
-			"generator": "Ninja",
-			"binaryDir": "${sourceDir}/out/build/${presetName}",
-			"installDir": "${sourceDir}/out/install/${presetName}",
-			"toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+			"name": "ninja-multi-vcpkg",
+			"displayName": "Ninja Multi-Config",
+			"description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations with x64",
+			"binaryDir": "${sourceDir}/builds/${presetName}",
+			"generator": "Ninja Multi-Config",
 			"cacheVariables": {
-				"CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-				"CMAKE_BUILD_TYPE": "Debug"
+				"CMAKE_TOOLCHAIN_FILE": {
+					"type": "FILEPATH",
+					"value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+				}
 			}
 		},
 		{
-			"name": "x64-debug",
-			"displayName": "x64 Debug",
-			"description": "Sets debug build type and x64 arch",
-			"inherits": "base",
-			"architecture": {
-				"value": "x64",
-				"strategy": "external"
-			}
-		},
-		{
-			"name": "x64-release",
-			"displayName": "x64 Release",
-			"description": "Sets release build type",
-			"inherits": "x64-debug",
-			"cacheVariables": {
-				"CMAKE_BUILD_TYPE": "Release"
-			}
-		},
-		{
-			"name": "x86-debug",
-			"displayName": "x86 Debug",
-			"description": "Sets debug build type and x86 arch",
-			"inherits": "base",
-			"architecture": {
-				"value": "x86",
-				"strategy": "external"
-			},
-			"condition": {
-				"type": "equals",
-				"lhs": "${hostSystemName}",
-				"rhs": "Windows"
-			}
-		},
-		{
-			"name": "x86-release",
-			"displayName": "x86 Release",
-			"description": "Sets release build type",
-			"inherits": "x86-debug",
-			"cacheVariables": {
-				"CMAKE_BUILD_TYPE": "Release"
-			}
-		},
-		{
-			"name": "tests",
-			"displayName": "Tests",
+			"name": "ninja-multi-vcpkg-tests",
+			"displayName": "Ninja Multi-Config Tests",
 			"description": "Enables building of tests",
-			"inherits": "base",
+			"inherits": "ninja-multi-vcpkg",
 			"cacheVariables": {
 				"BUILD_TESTS": true
 			}
@@ -74,54 +31,56 @@
 	],
 	"buildPresets": [
 		{
-			"name": "x64-debug-build",
-			"displayName": "Default",
-			"configurePreset": "x64-debug",
-			"description": "Vanilla build"
+			"name": "ninja-multi-vcpkg-debug",
+			"configurePreset": "ninja-multi-vcpkg",
+			"displayName": "Build ninja-multi-vcpkg-debug",
+			"description": "Build ninja-multi-vcpkg Debug configuration",
+			"configuration": "Debug"
 		},
 		{
-			"name": "x64-release-build",
-			"displayName": "Default",
-			"configurePreset": "x64-release",
-			"description": "Vanilla build"
-		},
-		{
-			"name": "x86-debug-build",
-			"displayName": "Default",
-			"configurePreset": "x86-debug",
-			"description": "Vanilla build"
-		},
-		{
-			"name": "x86-release-build",
-			"displayName": "Default",
-			"configurePreset": "x86-release",
-			"description": "Vanilla build"
+			"name": "ninja-multi-vcpkg-release",
+			"configurePreset": "ninja-multi-vcpkg",
+			"displayName": "Build ninja-multi-vcpkg-release",
+			"description": "Build ninja-multi-vcpkg Release configuration",
+			"configuration": "RelWithDebInfo"
 		},
 		{
 			"name": "verbose-build",
 			"displayName": "Verbose Build",
 			"description": "Passes -v to Ninja",
-			"configurePreset": "x64-debug",
+			"configurePreset": "ninja-multi-vcpkg",
 			"nativeToolOptions": ["-v"]
 		},
 		{
-			"name": "tests",
-			"displayName": "Tests",
-			"configurePreset": "tests",
-			"description": "Tests build"
+			"name": "ninja-multi-vcpkg-tests-debug",
+			"configurePreset": "ninja-multi-vcpkg-tests",
+			"displayName": "Build ninja-multi-vcpkg-tests",
+			"description": "Build ninja-multi-vcpkg tests configuration",
+			"configuration": "Debug"
 		}
 	],
 	"testPresets": [
 		{
-			"name": "test",
+			"name": "test-base",
+			"hidden": true,
+			"configurePreset": "ninja-multi-vcpkg-tests",
 			"description": "Enable output on failure",
-			"configurePreset": "tests",
 			"output": {
 				"outputOnFailure": true
 			},
 			"execution": {
 				"noTestsAction": "error"
 			}
+		},
+		{
+			"name": "ninja-multi-vcpkg-tests-debug",
+			"configuration": "Debug",
+			"inherits": "test-base"
+		},
+		{
+			"name": "ninja-multi-vcpkg-tests-release",
+			"configuration": "RelWithDebInfo",
+			"inherits": "test-base"
 		}
 	]
 }
