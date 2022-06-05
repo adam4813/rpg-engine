@@ -18,30 +18,21 @@ jobs:
             windows-2019,
             ubuntu-20.04,
             ubuntu-18.04,
-            #macOS-latest,
+            macOS-latest,
           ]
         arch: [x86, x64]
-        include:
-          - os: windows-latest
-            vcpkgTripletOs: windows
-          - os: windows-2019
-            vcpkgTripletOs: windows
-          - os: ubuntu-20.04
-            vcpkgTripletOs: linux
-          - os: ubuntu-18.04
-            vcpkgTripletOs: linux
-          #- os: macOS-latest
-          #  vcpkgTripletOs: osx
+        build_config: ["debug", "release"]
         exclude:
           - os: ubuntu-20.04
             arch: x86
           - os: ubuntu-18.04
             arch: x86
           - os: macOS-latest
+          - os: macOS-latest
             arch: x86
     env:
-      buildDir: ${{ github.workspace }}/out/build/${{ matrix.arch }}-release
-      VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
+      CONFIG_PRESET: ninja-multi-vcpkg
+      BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
       GCC_VERSION: 10
     runs-on: ${{ matrix.os }}
@@ -73,17 +64,18 @@ jobs:
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
         with:
-          configurePreset: ${{ matrix.arch }}-release
-          buildPreset: ${{ matrix.arch }}-release-build
-          #testPreset: test
+          configurePreset: ${{ env.CONFIG_PRESET }}
+          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.BUILD_CONFIG }}
+          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.BUILD_CONFIG }}
       - name: Upload the build artifact
+        if: matrix.BUILD_CONFIG == "release"
         uses: actions/upload-artifact@v2
         with:
           name: ${{ matrix.os }}
           path: |
-            ${{ env.buildDir }}/client/rpg-client*
-            ${{ env.buildDir }}/client/*.dll
-            ${{ env.buildDir }}/server/rpg-server*
+            ${{ env.BUILD_DIR }}/client/rpg-client*
+            ${{ env.BUILD_DIR }}/client/*.dll
+            ${{ env.BUILD_DIR }}/server/rpg-server*
           if-no-files-found: ignore
   prepublish:
     runs-on: ubuntu-latest
@@ -108,12 +100,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [
+        os:
+          [
             windows-latest,
             windows-2019,
             ubuntu-20.04,
             ubuntu-18.04,
-            #macOS-latest,
+            macOS-latest,
           ]
         arch: [x64]
     if: startsWith(github.ref, 'refs/tags/v')
@@ -125,8 +118,8 @@ jobs:
           name: ${{ matrix.os }}
       - name: Package release
         run: |
-          zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.buildDir }}/client
-          zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.buildDir }}/server
+          zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.BUILD_DIR }}/client
+          zip --junk-paths -r -u ${{ matrix.os }}.zip ${{ env.BUILD_DIR }}/server
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
