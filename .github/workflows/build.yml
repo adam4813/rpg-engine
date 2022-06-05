@@ -39,8 +39,9 @@ jobs:
           - os: ubuntu-18.04
             arch: x86
           - os: macOS-latest
-          - os: macOS-latest
             arch: x86
+          - os: macOS-latest
+            arch: x64
     runs-on: ${{ matrix.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
