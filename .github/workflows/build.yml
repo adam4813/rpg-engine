@@ -16,11 +16,11 @@ jobs:
         vcpkgTripletOs: [windows, linux, osx]
         build_config: [debug, release]
         exclude:
-          - vcpkgTripletOs: osx
-            arch: x86
           - vcpkgTripletOs: linux
             arch: x86
-    runs-on: ${{ matrix.vcpkgTripletOs }}-latest
+          - vcpkgTripletOs: osx
+            arch: x86
+    runs-on: ${{ matrix.vcpkgTripletOs != 'osx' && matrix.vcpkgTripletOs || 'macOS' }}-latest
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
       VCPKG_DEFAULT_TRIPLET: ${{matrix.arch}}-${{ matrix.vcpkgTripletOs }}
