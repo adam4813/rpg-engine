@@ -16,19 +16,28 @@ jobs:
           [
             windows-latest,
             windows-2019,
+            ubuntu-22.04,
             ubuntu-latest,
             ubuntu-18.04,
+            macOS-12,
             macOS-latest,
           ]
-        arch: [x86, x64]
+        arch: [x64]
         build_config: [debug, release]
+        include:
+          - os: windows-latest
+            arch: x86
+            build_config: debug
+          - os: windows-2019
+            arch: x86
+            build_config: debug
+          - os: windows-latest
+            arch: x86
+            build_config: release
+          - os: windows-2019
+            arch: x86
+            build_config: release
         exclude:
-          - os: ubuntu-latest
-            arch: x86
-          - os: ubuntu-18.04
-            arch: x86
-          - os: macOS-latest
-            arch: x86
           - os: macOS-latest
     runs-on: ${{ matrix.os }}
     env:
@@ -80,7 +89,7 @@ jobs:
         run: |
           case ${{ matrix.build_config }} in
           debug) configDir=Debug ;;
-          release) configDir=RelWithDebInfo ;;
+          release) configDir=Release ;;
           esac
           echo "BUILD_CONFIG_DIR=$configDir" >> $GITHUB_ENV
       - name: Upload the build artifact
