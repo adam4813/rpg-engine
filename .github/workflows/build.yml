@@ -16,23 +16,22 @@ jobs:
         vcpkgTripletOs: [windows, linux, osx]
         build_config: [debug, release]
         include:
-          - os: macOS
-            vcpkgTripletOs: osx
-          - os: linux
-            vcpkgTripletOs: linux
-          - os: windows
-            vcpkgTripletOs: windows
-          - os: windows
-            vcpkgTripletOs: windows
+          - vcpkgTripletOs: osx
+            os: macOS
+          - vcpkgTripletOs: windows
             arch: x86
-    runs-on: ${{ matrix.os }}-latest
+        exclude:
+          - vcpkgTripletOs: osx
+          - vcpkgTripletOs: osx
+            os: macOS
+    runs-on: ${{ matrix.os || matrix.vcpkgTripletOs }}-latest
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
       VCPKG_DEFAULT_TRIPLET: ${{matrix.arch}}-${{ matrix.vcpkgTripletOs }}
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
       GCC_VERSION: 10
     steps:
-      - uses: actions/checkout@latest
+      - uses: actions/checkout@v2
         with:
           submodules: true
       - uses: lukka/get-cmake@latest
