@@ -31,6 +31,7 @@ jobs:
         with:
           submodules: true
       - name: Set VCPKG_DEFAULT_TRIPLET
+        shell: bash
         run: |
           case ${{ runner.os }} in
           windows) tripletOs=windows ;;
@@ -38,6 +39,9 @@ jobs:
           macOS) tripletOs=osx ;;
           esac
           echo "VCPKG_DEFAULT_TRIPLET=${{ matrix.arch }}-$tripletOs" >> $GITHUB_ENV
+      - name: Display VCPKG_DEFAULT_TRIPLET
+        shell: bash
+        run: echo "$VCPKG_DEFAULT_TRIPLET"
       - uses: lukka/get-cmake@latest
       - name: Install os deps (Linux)
         if: runner.os == 'Linux'
