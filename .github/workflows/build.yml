@@ -12,15 +12,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: [windows-latest, ubuntu-latest, macOS-latest]
         arch: [x86, x64]
-        vcpkgTripletOs: [windows, linux, osx]
         build_config: [debug, release]
+        include:
+          - os: windows-latest
+            vcpkgTripletOs: windows
+          - os: ubuntu-latest
+            vcpkgTripletOs: linux
+          - os: macOS-latest
+            vcpkgTripletOs: osx
         exclude:
-          - vcpkgTripletOs: linux
+          - os: ubuntu-latest
             arch: x86
-          - vcpkgTripletOs: osx
+          - os: macOS-latest
             arch: x86
-    runs-on: ${{ matrix.vcpkgTripletOs != 'osx' && matrix.vcpkgTripletOs || 'macOS' }}-latest
+    runs-on: ${{ matrix.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
       VCPKG_DEFAULT_TRIPLET: ${{matrix.arch}}-${{ matrix.vcpkgTripletOs }}
