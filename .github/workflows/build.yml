@@ -31,7 +31,7 @@ jobs:
         with:
           submodules: true
       - name: Set VCPKG_DEFAULT_TRIPLET (x86-windows)
-        if: matrix.arch == x86 && matrix.os == windows-latest
+        if: matrix.arch == 'x86' && matrix.os == 'windows-latest'
         run: echo "VCPKG_DEFAULT_TRIPLET=x86-winodws" >> $GITHUB_ENV
       - uses: lukka/get-cmake@latest
       - name: Install os deps (Linux)
