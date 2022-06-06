@@ -15,28 +15,24 @@ jobs:
         os: [windows-latest, ubuntu-latest, macOS-latest]
         arch: [x86, x64]
         build_config: [debug, release]
-        include:
-          - os: windows-latest
-            vcpkgTripletOs: windows
-          - os: ubuntu-latest
-            vcpkgTripletOs: linux
-          - os: macOS-latest
-            vcpkgTripletOs: osx
         exclude:
           - os: ubuntu-latest
             arch: x86
           - os: macOS-latest
             arch: x86
+          - os: macOS-latest
     runs-on: ${{ matrix.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
-      VCPKG_DEFAULT_TRIPLET: ${{matrix.arch}}-${{ matrix.vcpkgTripletOs }}
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
       GCC_VERSION: 10
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - name: Set VCPKG_DEFAULT_TRIPLET (x86-windows)
+        if: matrix.arch == x86 && matrix.os == windows-latest
+        run: echo "VCPKG_DEFAULT_TRIPLET=x86-winodws" >> $GITHUB_ENV
       - uses: lukka/get-cmake@latest
       - name: Install os deps (Linux)
         if: runner.os == 'Linux'
@@ -63,7 +59,7 @@ jobs:
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_config }}
-          testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_config }}
+          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_config }}
       - name: Upload the build artifact (Release only)
         if: matrix.build_config == 'release'
         uses: actions/upload-artifact@v3
