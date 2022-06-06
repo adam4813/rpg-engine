@@ -20,13 +20,14 @@ jobs:
             ubuntu-18.04,
             macOS-latest,
           ]
-        arch: [x86, x64]
+        arch: [x64]
         build_config: [debug, release]
+        include:
+          - os: windows-latest
+            arch: x86
+          - os: windows-2019
+            arch: x86
         exclude:
-          - os: ubuntu-latest
-            arch: x86
-          - os: macOS-latest
-            arch: x86
           - os: macOS-latest
     runs-on: ${{ matrix.os }}
     env:
