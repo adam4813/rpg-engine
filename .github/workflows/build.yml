@@ -24,7 +24,7 @@ jobs:
           - vcpkgTripletOs: osx
           - vcpkgTripletOs: osx
             os: macOS
-    runs-on: ${{ matrix.os || matrix.vcpkgTripletOs }}-latest
+    runs-on: ${{ matrix.vcpkgTripletOs }}-latest
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
       VCPKG_DEFAULT_TRIPLET: ${{matrix.arch}}-${{ matrix.vcpkgTripletOs }}
