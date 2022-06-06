@@ -12,14 +12,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: [x64]
+        arch: [x86, x64]
         vcpkgTripletOs: [windows, linux, osx]
         build_config: [debug, release]
-        include:
-          - vcpkgTripletOs: windows
-            arch: x86
         exclude:
           - vcpkgTripletOs: osx
+            arch: x86
+          - vcpkgTripletOs: linux
+            arch: x86
     runs-on: ${{ matrix.vcpkgTripletOs }}-latest
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
