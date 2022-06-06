@@ -16,41 +16,48 @@ jobs:
           [
             windows-latest,
             windows-2019,
-            ubuntu-20.04,
+            ubuntu-22.04,
+            ubuntu-latest,
             ubuntu-18.04,
+            macOS-12,
             macOS-latest,
           ]
-        arch: [x86, x64]
+        arch: [x64]
         build_config: [debug, release]
         include:
           - os: windows-latest
-            vcpkgTripletOs: windows
+            arch: x86
+            build_config: debug
           - os: windows-2019
-            vcpkgTripletOs: windows
-          - os: ubuntu-20.04
-            vcpkgTripletOs: linux
-          - os: ubuntu-18.04
-            vcpkgTripletOs: linux
-          #- os: macOS-latest
-          #  vcpkgTripletOs: osx
+            arch: x86
+            build_config: debug
+          - os: windows-latest
+            arch: x86
+            build_config: release
+          - os: windows-2019
+            arch: x86
+            build_config: release
         exclude:
-          - os: ubuntu-20.04
-            arch: x86
-          - os: ubuntu-18.04
-            arch: x86
-          - os: macOS-latest
-            arch: x86
+          - os: macOS-12
           - os: macOS-latest
     runs-on: ${{ matrix.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
-      VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
       GCC_VERSION: 10
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - name: Set VCPKG_DEFAULT_TRIPLET
+        shell: bash
+        run: |
+          case ${{ runner.os }} in
+          Windows) tripletOs=windows ;;
+          Linux) tripletOs=linux ;;
+          macOS) tripletOs=osx ;;
+          esac
+          echo "VCPKG_DEFAULT_TRIPLET=${{ matrix.arch }}-$tripletOs" >> $GITHUB_ENV
       - uses: lukka/get-cmake@latest
       - name: Install os deps (Linux)
         if: runner.os == 'Linux'
@@ -70,27 +77,34 @@ jobs:
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         with:
-          appendedCacheKey: ${{ matrix.os}}-${{ matrix.arch }}
+          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_config }}
-          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_config }}
-      - name: Upload the build artifact (Release only)
-        if: matrix.build_config == 'release'
+          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_config }
+      - name: Set BUILD_CONFIG_DIR
+        shell: bash
+        run: |
+          case ${{ matrix.build_config }} in
+          debug) configDir=Debug ;;
+          release) configDir=Release ;;
+          esac
+          echo "BUILD_CONFIG_DIR=$configDir" >> $GITHUB_ENV
+      - name: Upload the build artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.os }}-${{ matrix.arch }}
+          name: ${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.build_config }}
           path: |
-            ${{ env.CLIENT_BUILD_DIR }}/RelWithDebInfo/rpg-client*
-            ${{ env.CLIENT_BUILD_DIR }}/RelWithDebInfo/*.dll
-            ${{ env.SERVER_BUILD_DIR }}/RelWithDebInfo/rpg-server*
+            ${{ env.CLIENT_BUILD_DIR }}/rpg-client*
+            ${{ env.CLIENT_BUILD_DIR }}/*.dll
+            ${{ env.SERVER_BUILD_DIR }}/rpg-server*
           if-no-files-found: ignore
         env:
-          CLIENT_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/client
-          SERVER_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/server
+          CLIENT_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/client/${{ env.BUILD_CONFIG_DIR }}
+          SERVER_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/server/${{ env.BUILD_CONFIG_DIR }}
   publish:
     runs-on: ubuntu-latest
     needs: build
@@ -99,17 +113,16 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
-      - name: Display files system
-        run: ls -R
       - name: Package release
         run: |
-          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/client/RelWithDebInfo"; done
-          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/server/RelWithDebInfo"; done
+          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/client/${{ env.BUILD_CONFIG_DIR }}"; done
+          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/server/${{ env.BUILD_CONFIG_DIR }}"; done
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          name: Release ${{ github.ref_name }}
           files: "*.zip"
           draft: false
           prerelease: false
+          discussion_category_name: Releases
