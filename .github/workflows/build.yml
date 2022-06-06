@@ -12,43 +12,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          [
-            windows-latest,
-            windows-2019,
-            ubuntu-20.04,
-            ubuntu-18.04,
-            macOS-latest,
-          ]
-        arch: [x86, x64]
+        arch: [x64]
+        vcpkgTripletOs: [windows, linux, osx]
         build_config: [debug, release]
         include:
-          - os: windows-latest
-            vcpkgTripletOs: windows
-          - os: windows-2019
-            vcpkgTripletOs: windows
-          - os: ubuntu-20.04
+          - os: macOS
+            vcpkgTripletOs: osx
+          - os: linux
             vcpkgTripletOs: linux
-          - os: ubuntu-18.04
-            vcpkgTripletOs: linux
-          #- os: macOS-latest
-          #  vcpkgTripletOs: osx
-        exclude:
-          - os: ubuntu-20.04
+          - os: windows
+            vcpkgTripletOs: windows
+          - os: windows
+            vcpkgTripletOs: windows
             arch: x86
-          - os: ubuntu-18.04
-            arch: x86
-          - os: macOS-latest
-            arch: x86
-          - os: macOS-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}-latest
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
-      VCPKG_DEFAULT_TRIPLET: ${{ matrix.arch }}-${{ matrix.vcpkgTripletOs }}
+      VCPKG_DEFAULT_TRIPLET: ${{matrix.arch}}-${{ matrix.vcpkgTripletOs }}
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
       GCC_VERSION: 10
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@latest
         with:
           submodules: true
       - uses: lukka/get-cmake@latest
@@ -70,7 +54,7 @@ jobs:
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         with:
-          appendedCacheKey: ${{ matrix.os}}-${{ matrix.arch }}
+          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
           vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
@@ -82,7 +66,7 @@ jobs:
         if: matrix.build_config == 'release'
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.os }}-${{ matrix.arch }}
+          name: ${{ env.VCPKG_DEFAULT_TRIPLET }}
           path: |
             ${{ env.CLIENT_BUILD_DIR }}/RelWithDebInfo/rpg-client*
             ${{ env.CLIENT_BUILD_DIR }}/RelWithDebInfo/*.dll
@@ -99,8 +83,6 @@ jobs:
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v3
-      - name: Display files system
-        run: ls -R
       - name: Package release
         run: |
           for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/client/RelWithDebInfo"; done
@@ -109,7 +91,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref }}
-          name: Release ${{ github.ref }}
+          name: Release ${{ github.ref_name }}
           files: "*.zip"
           draft: false
           prerelease: false
+          discussion_category_name: Releases
