@@ -37,9 +37,6 @@ jobs:
           - os: windows-2019
             arch: x86
             build_config: release
-        exclude:
-          - os: macOS-12
-          - os: macOS-latest
     runs-on: ${{ matrix.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
@@ -74,6 +71,8 @@ jobs:
         run: |
           alias gcc='gcc-${{ env.GCC_VERSION }}'
           alias g++='g++-${{ env.GCC_VERSION }}'
+          export CC=gcc
+          export CXX=g++
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         with:
