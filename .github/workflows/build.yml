@@ -69,10 +69,8 @@ jobs:
       - name: Switch gcc version (MacOS)
         if: runner.os == 'MacOS'
         run: |
-          alias gcc='gcc-${{ env.GCC_VERSION }}'
-          alias g++='g++-${{ env.GCC_VERSION }}'
-          echo "CC=gcc" >> $GITHUB_ENV
-          echo "CXX=g++" >> $GITHUB_ENV
+          echo "CC=gcc-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
+          echo "CXX=g++-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         with:
