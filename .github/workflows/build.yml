@@ -120,11 +120,11 @@ jobs:
         uses: lukka/run-cmake@v10
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
-          buildPreset: ${{ env.CONFIG_PRESET }}-${{ build_preset }}
+          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
       - uses: ./.github/actions/upload-artifact
         with:
-          artifactName: ${{ matrix.arch }}-${{ matrix.os }}-${{ build_preset }}
-          buildPreset: ${{ build_preset }}
+          artifactName: ${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.build_preset }}
+          buildPreset: ${{ matrix.build_preset }}
   publish:
     runs-on: ubuntu-latest
     needs: publish_artifact
