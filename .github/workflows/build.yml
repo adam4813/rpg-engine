@@ -41,7 +41,7 @@ jobs:
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
-      GCC_VERSION: 10
+      GCC_VERSION: 11
     steps:
       - uses: actions/checkout@v2
         with:
@@ -61,14 +61,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Setup Cpp (MacOS)
+      - name: Setup GCC Cpp (Non-windows)
         uses: aminya/setup-cpp@v1
-        if: runner.os == 'MacOS'
-        with:
-          compiler: llvm-14
-      - name: Setup Cpp (Linux)
-        uses: aminya/setup-cpp@v1
-        if: runner.os == 'Linux'
+        if: runner.os != 'Windows'
         with:
           compiler: gcc-${{ env.GCC_VERSION }}
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
@@ -81,7 +76,7 @@ jobs:
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_config }}
-          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_config }
+          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_config }}
       - name: Set BUILD_CONFIG_DIR
         shell: bash
         run: |
