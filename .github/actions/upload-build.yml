@@ -1,0 +1,36 @@
+# yaml-language-server: $schema=https://json.schemastore.org/github-action.json
+
+name: Upload build artifact
+description: Collects build files and uploads an artifact
+
+inputs:
+  artifactName:
+    required: true
+    description: Name of the build artifact
+  buildPreset:
+    required: true
+    description: Name of the build preset
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set BUILD_CONFIG_DIR
+      shell: bash
+      run: |
+        case ${{ inputs.buildPreset }} in
+        debug) configDir=Debug ;;
+        release) configDir=Release ;;
+        esac
+        echo "BUILD_CONFIG_DIR=$configDir" >> $GITHUB_ENV
+    - name: Upload the build artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifactName }}
+        path: |
+          ${{ env.CLIENT_BUILD_DIR }}/rpg-client*
+          ${{ env.CLIENT_BUILD_DIR }}/*.dll
+          ${{ env.SERVER_BUILD_DIR }}/rpg-server*
+        if-no-files-found: ignore
+      env:
+        CLIENT_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/client/${{ env.BUILD_CONFIG_DIR }}
+        SERVER_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/server/${{ env.BUILD_CONFIG_DIR }}
