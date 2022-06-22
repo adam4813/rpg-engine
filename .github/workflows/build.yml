@@ -19,6 +19,15 @@ jobs:
         os: [ubuntu-22.04, ubuntu-latest, ubuntu-18.04, macOS-12, macOS-latest]
         compiler: [gcc-11, gcc-12, llvm-13, llvm-14]
         build_preset: [debug, release]
+        exclude:
+          - os: ubuntu-18.04
+            compiler: gcc-12
+          - os: ubuntu-latest
+            compiler: gcc-12
+          - os: ubuntu-22.04
+            compiler: llvm-13
+          - os: macOS-12
+          - os: macOS-latest
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +52,7 @@ jobs:
           #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
       - uses: ./.github/actions/upload-artifact
         with:
-          artifactName: ${{ matrix.arch }}-${{ runner.os }}-${{ matrix.build_preset }}
+          artifactName: ${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.build_preset }}
           buildPreset: ${{ matrix.build_preset }}
   build-windows:
     strategy:
@@ -53,6 +62,9 @@ jobs:
         arch: [x64, x86]
         compiler: [gcc-11, gcc-12, llvm-13, llvm-14, msvc]
         build_preset: [debug, release]
+        exclude:
+          - compiler: gcc-11
+          - compiler: gcc-12
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
@@ -60,11 +72,11 @@ jobs:
           submodules: true
       - uses: lukka/get-cmake@latest
       - name: Setup Cpp
+        if: matrix.compiler != 'msvc'
         uses: aminya/setup-cpp@v1
         with:
           compiler: ${{ matrix.compiler }}
           vcvarsall: true
-          arch: ${{ matrix.arch }}
       - uses: ./.github/actions/setup-vcpkg
         with:
           arch: ${{ matrix.arch }}
@@ -74,13 +86,48 @@ jobs:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
           #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
+  publish_artifact:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        arch: [x64]
+        build_preset: [release]
+        include:
+          - os: windows-latest
+            arch: x86
+    runs-on: ${{ matrix.os }}
+    needs: [build-non-windows, build-windows]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: lukka/get-cmake@latest
+      - name: Install os deps (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
+      - name: Setup Cpp (Non-Windows)
+        if: runner.os != 'Windows'
+        uses: aminya/setup-cpp@v1
+        with:
+          compiler: llvm-14
+      - uses: ./.github/actions/setup-vcpkg
+        with:
+          arch: ${{ matrix.arch }}
+      - name: Configure cmake and build
+        uses: lukka/run-cmake@v10
+        with:
+          configurePreset: ${{ env.CONFIG_PRESET }}
+          buildPreset: ${{ env.CONFIG_PRESET }}-${{ build_preset }}
       - uses: ./.github/actions/upload-artifact
         with:
-          artifactName: ${{ matrix.arch }}-${{ runner.os }}-${{ matrix.build_preset }}
-          buildPreset: ${{ matrix.build_preset }}
+          artifactName: ${{ matrix.arch }}-${{ matrix.os }}-${{ build_preset }}
+          buildPreset: ${{ build_preset }}
   publish:
     runs-on: ubuntu-latest
-    needs: [build-non-windows, build-windows]
+    needs: publish_artifact
     if: startsWith(github.ref, 'refs/tags/v')
     name: Upload Release Asset(s)
     steps:
