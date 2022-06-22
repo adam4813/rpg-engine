@@ -61,18 +61,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Switch gcc version (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-${{ env.GCC_VERSION }} ${{ env.GCC_VERSION }}
-      - name: Switch gcc version (MacOS)
+      - name: Setup Cpp (MacOS)
+        uses: aminya/setup-cpp@v1
         if: runner.os == 'MacOS'
-        run: |
-          echo "CC=gcc-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
-          echo "CXX=g++-${{ env.GCC_VERSION }}" >> $GITHUB_ENV
-        env:
-          GCC_VERSION: 11
+        with:
+          compiler: llvm-14
+      - name: Setup Cpp (Linux)
+        uses: aminya/setup-cpp@v1
+        if: runner.os == 'Linux'
+        with:
+          compiler: gcc-${{ env.GCC_VERSION }}
       - name: Restore artifacts, or run vcpkg, build and cache artifacts
         uses: lukka/run-vcpkg@v10
         with:
