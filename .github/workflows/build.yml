@@ -26,7 +26,7 @@ jobs:
           submodules: true
       - uses: lukka/get-cmake@latest
       - name: Install os deps (Linux)
-        if: runner.os == "Linux"
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
