@@ -50,10 +50,6 @@ jobs:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
           #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
-      - uses: ./.github/actions/upload-artifact
-        with:
-          artifactName: ${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.build_preset }}
-          buildPreset: ${{ matrix.build_preset }}
   build-windows:
     strategy:
       fail-fast: false
@@ -96,6 +92,9 @@ jobs:
         include:
           - os: windows-latest
             arch: x86
+            build_preset: release
+        exclude:
+          - os: macos-latest
     runs-on: ${{ matrix.os }}
     needs: [build-non-windows, build-windows]
     steps:
