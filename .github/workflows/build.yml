@@ -46,11 +46,11 @@ jobs:
           - os: ubuntu-latest
             arch: x86
           - os: ubuntu-18.04
+            arch: x86
           - os: macOS-12
             compiler: msvc
           - os: macOS-latest
             compiler: msvc
-            arch: x86
           - os: macOS-12
             arch: x86
           - os: macOS-latest
