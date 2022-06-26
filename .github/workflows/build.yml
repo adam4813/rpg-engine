@@ -7,96 +7,59 @@ on:
   push:
     tags: [v*]
 
-env:
-  CONFIG_PRESET: ninja-multi-vcpkg
-  VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
-
 jobs:
-  build-non-windows:
+  build:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-latest, ubuntu-18.04, macOS-12, macOS-latest]
-        compiler: [gcc-11, gcc-12, llvm-13, llvm-14]
+        os:
+          [
+            ubuntu-22.04,
+            ubuntu-latest,
+            ubuntu-18.04,
+            macOS-12,
+            macOS-latest,
+            windows-latest,
+            windows-2019,
+          ]
+        compiler: [gcc-11, gcc-12, llvm-13, llvm-14, msvc]
+        arch: [x64, x86]
         build_preset: [debug, release]
         exclude:
-          - os: ubuntu-18.04
-            compiler: gcc-12
-          - os: ubuntu-latest
-            compiler: gcc-12
-          - os: ubuntu-22.04
-            compiler: llvm-13
           - os: macOS-12
           - os: macOS-latest
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-      - uses: lukka/get-cmake@latest
-      - name: Install os deps (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Setup Cpp
-        uses: aminya/setup-cpp@v1
-        with:
-          compiler: ${{ matrix.compiler }}
-      - uses: ./.github/actions/setup-vcpkg
-      - name: Configure cmake and build
-        uses: lukka/run-cmake@v10
-        with:
-          configurePreset: ${{ env.CONFIG_PRESET }}
-          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
-          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
-  build-windows:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, windows-2019]
-        arch: [x64, x86]
-        compiler: [gcc-11, gcc-12, llvm-13, llvm-14, msvc]
-        build_preset: [debug, release]
-        exclude:
-          - compiler: gcc-11
           - compiler: gcc-12
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-      - uses: lukka/get-cmake@latest
-      - name: Setup Cpp
-        if: matrix.compiler != 'msvc'
-        uses: aminya/setup-cpp@v1
-        with:
-          compiler: ${{ matrix.compiler }}
-          vcvarsall: true
-      - uses: ./.github/actions/setup-vcpkg
-        with:
-          arch: ${{ matrix.arch }}
-      - name: Configure cmake and build
-        uses: lukka/run-cmake@v10
-        with:
-          configurePreset: ${{ env.CONFIG_PRESET }}
-          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
-          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
-  publish_artifact:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        arch: [x64]
-        build_preset: [release]
-        include:
+          - os: windows-2019
+            compiler: gcc-11
           - os: windows-latest
+            compiler: gcc-11
+          - os: ubuntu-22.04
+            compiler: llvm-13
+          - os: ubuntu-22.04
+            compiler: msvc
+          - os: ubuntu-latest
+            compiler: msvc
+          - os: ubuntu-18.04
+            compiler: msvc
+          - os: ubuntu-22.04
             arch: x86
-            build_preset: release
-        exclude:
-          - os: macos-latest
+          - os: ubuntu-latest
+            arch: x86
+          - os: ubuntu-18.04
+          - os: macOS-12
+            compiler: msvc
+          - os: macOS-latest
+            compiler: msvc
+            arch: x86
+          - os: macOS-12
+            arch: x86
+          - os: macOS-latest
+            arch: x86
     runs-on: ${{ matrix.os }}
-    needs: [build-non-windows, build-windows]
+    env:
+      CONFIG_PRESET: ninja-multi-vcpkg
+      VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
+      SHOULD_PUBLISH: ${{ contains(matrix.os, 'latest') && matrix.build_preset == 'release' }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -107,11 +70,12 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
-      - name: Setup Cpp (Non-Windows)
-        if: runner.os != 'Windows'
+      - name: Setup Cpp
         uses: aminya/setup-cpp@v1
+        if: matrix.compiler != 'msvc'
         with:
-          compiler: llvm-14
+          compiler: ${{ matrix.compiler }}
+          vcvarsall: ${{ runner.os == 'Windows' }}
       - uses: ./.github/actions/setup-vcpkg
         with:
           arch: ${{ matrix.arch }}
@@ -120,10 +84,29 @@ jobs:
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
-      - uses: ./.github/actions/upload-artifact
+          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
+      - name: Set BUILD_CONFIG_DIR
+        if: env.SHOULD_PUBLISH
+        shell: bash
+        run: |
+          case ${{ matrix.build_preset }} in
+          debug) configDir=Debug ;;
+          release) configDir=Release ;;
+          esac
+          echo "BUILD_CONFIG_DIR=$configDir" >> $GITHUB_ENV
+      - name: Upload the build artifact
+        uses: actions/upload-artifact@v3
+        if: env.SHOULD_PUBLISH
         with:
-          artifactName: ${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.build_preset }}
-          buildPreset: ${{ matrix.build_preset }}
+          name: ${{ matrix.arch }}-${{ matrix.os }}-${{ matrix.build_preset }}
+          path: |
+            ${{ env.CLIENT_BUILD_DIR }}/rpg-client*
+            ${{ env.CLIENT_BUILD_DIR }}/*.dll
+            ${{ env.SERVER_BUILD_DIR }}/rpg-server*
+          if-no-files-found: ignore
+        env:
+          CLIENT_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/client/${{ env.BUILD_CONFIG_DIR }}
+          SERVER_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/server/${{ env.BUILD_CONFIG_DIR }}
   publish:
     runs-on: ubuntu-latest
     needs: publish_artifact
