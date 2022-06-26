@@ -25,8 +25,22 @@ jobs:
             { os: macOS-12, arch: x64 },
             { os: macOS-latest, arch: x64 },
           ]
-        compiler: [gcc-11, gcc-12, llvm-13, llvm-14, msvc]
         build_preset: [debug, release]
+        compiler: [gcc-11, gcc-12, llvm-13, llvm-14]
+        include:
+          # MSVC should compile the same regardless of windows version
+          - img: { os: windows-latest, arch: x86 }
+            build_preset: debug
+            compiler: msvc
+          - img: { os: windows-latest, arch: x86 }
+            build_preset: release
+            compiler: msvc
+          - img: { os: windows-latest, arch: x64 }
+            build_preset: debug
+            compiler: msvc
+          - img: { os: windows-latest, arch: x64 }
+            build_preset: release
+            compiler: msvc
         exclude:
           - img: { os: macOS-12 }
           - img: { os: macOS-latest }
@@ -39,18 +53,6 @@ jobs:
             compiler: gcc-11
           - img: { os: ubuntu-22.04 }
             compiler: llvm-13
-
-          - img: { os: ubuntu-22.04 }
-            compiler: msvc
-          - img: { os: ubuntu-latest }
-            compiler: msvc
-          - img: { os: ubuntu-18.04 }
-            compiler: msvc
-
-          - img: { os: macOS-12 }
-            compiler: msvc
-          - img: { os: macOS-latest }
-            compiler: msvc
     runs-on: ${{ matrix.img.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
