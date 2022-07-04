@@ -57,7 +57,7 @@ jobs:
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
-      SHOULD_PUBLISH: ${{ contains(matrix.img.os, 'latest') && matrix.build_preset.name == 'release' }}
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.img.arch }}-${{ matrix.img.tripletOs }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -73,9 +73,11 @@ jobs:
         with:
           compiler: ${{ matrix.compiler }}
           vcvarsall: ${{ runner.os == 'Windows' }}
-      - uses: ./.github/actions/setup-vcpkg
+      - name: Restore artifacts, or run vcpkg, build and cache artifacts
+        uses: lukka/run-vcpkg@v10
         with:
-          arch: ${{ matrix.img.arch }}
+          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
         with:
@@ -84,9 +86,9 @@ jobs:
           testPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
       - name: Upload the build artifact
         uses: actions/upload-artifact@v3
-        if: env.SHOULD_PUBLISH
+        if: contains(matrix.img.os, 'latest') && matrix.build_preset.name == 'release'
         with:
-          name: ${{ matrix.img.arch }}-${{ matrix.img.os }}-${{ matrix.build_preset.name }}
+          name: ${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ matrix.build_preset.name }}
           path: |
             ${{ env.CLIENT_BUILD_DIR }}/rpg-client*
             ${{ env.CLIENT_BUILD_DIR }}/*.dll
