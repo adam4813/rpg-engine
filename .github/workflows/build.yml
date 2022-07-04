@@ -29,16 +29,22 @@ jobs:
         compiler: [gcc-11, gcc-12, llvm-13, llvm-14]
         include:
           # MSVC should compile the same regardless of windows version
-          #- img: { os: windows-latest, arch: x86 }
+          #- img: { os: windows-latest, tripletOs: windows, arch: x86 }
           #  build_preset: { name: debug, outDir: Debug }
           #  compiler: msvc
-          #- img: { os: windows-latest, arch: x86 }
+          #- img: { os: windows-latest, tripletOs: windows, arch: x86 }
           #  build_preset: { name: release, outDir: Release }
           #  compiler: msvc
           - img: { os: windows-latest, arch: x64 }
             build_preset: { name: debug, outDir: Debug }
             compiler: msvc
-          - img: { os: windows-latest, arch: x64 }
+          - img: { os: windows-latest, tripletOs: windows, arch: x86 }
+            build_preset: { name: release, outDir: Release }
+            compiler: msvc
+          - img: { os: windows-latest, tripletOs: windows, arch: x64 }
+            build_preset: { name: debug, outDir: Debug }
+            compiler: msvc
+          - img: { os: windows-latest, tripletOs: windows, arch: x64 }
             build_preset: { name: release, outDir: Release }
             compiler: msvc
         exclude:
