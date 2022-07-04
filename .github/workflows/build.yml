@@ -81,6 +81,7 @@ jobs:
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
+          testPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
       - name: Configure cmake and test
         uses: lukka/run-cmake@v10
         with:
