@@ -64,6 +64,13 @@
 			"displayName": "Build ninja-multi-vcpkg-tests",
 			"description": "Build ninja-multi-vcpkg tests configuration",
 			"configuration": "Debug"
+		},
+		{
+			"name": "ninja-multi-vcpkg-tests-release",
+			"configurePreset": "ninja-multi-vcpkg-tests",
+			"displayName": "Build ninja-multi-vcpkg-tests",
+			"description": "Build ninja-multi-vcpkg tests configuration",
+			"configuration": "Release"
 		}
 	],
 	"testPresets": [
@@ -86,7 +93,7 @@
 		},
 		{
 			"name": "ninja-multi-vcpkg-tests-release",
-			"configuration": "RelWithDebInfo",
+			"configuration": "Release",
 			"inherits": "test-base"
 		}
 	]

@@ -84,8 +84,11 @@ jobs:
       - name: Configure cmake and test
         uses: lukka/run-cmake@v10
         with:
-          configurePreset: ${{ env.CONFIG_PRESET }}-tests
-          testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
+          configurePreset: ${{ env.CONFIG_PRESET }}
+          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
+          testPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
+        env:
+          CONFIG_PRESET: ${{ env.CONFIG_PRESET }}-tests
       - name: Set BUILD_CONFIG_DIR
         if: env.SHOULD_PUBLISH
         shell: bash
