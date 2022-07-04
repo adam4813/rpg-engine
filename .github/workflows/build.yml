@@ -82,14 +82,6 @@ jobs:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
           testPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
-      - name: Configure cmake and test
-        uses: lukka/run-cmake@v10
-        with:
-          configurePreset: ${{ env.CONFIG_PRESET }}
-          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
-          testPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
-        env:
-          CONFIG_PRESET: ${{ env.CONFIG_PRESET }}-tests
       - name: Upload the build artifact
         uses: actions/upload-artifact@v3
         if: env.SHOULD_PUBLISH
