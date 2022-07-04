@@ -1,4 +1,5 @@
 enable_testing()
+include(Dart)
 find_package(GTest CONFIG REQUIRED)
 include(GoogleTest)
 
