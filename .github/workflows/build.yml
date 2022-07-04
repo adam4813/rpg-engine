@@ -82,7 +82,7 @@ jobs:
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
           buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
-          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
+          testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
       - name: Set BUILD_CONFIG_DIR
         if: env.SHOULD_PUBLISH
         shell: bash
