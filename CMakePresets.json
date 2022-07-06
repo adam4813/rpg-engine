@@ -48,6 +48,13 @@
 			"description": "Passes -v to Ninja",
 			"configurePreset": "ninja-multi-vcpkg",
 			"nativeToolOptions": ["-v"]
+		},
+		{
+			"name": "ninja-multi-docs",
+			"configurePreset": "ninja-multi-vcpkg",
+			"displayName": "Build ninja-multi-docs",
+			"configuration": "Release",
+			"targets": ["doxygen", "doxybook", "mkdocs"]
 		}
 	],
 	"testPresets": [
