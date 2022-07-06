@@ -13,29 +13,24 @@ jobs:
       fail-fast: false
       matrix:
         # https://www.scivision.dev/github-actions-strategy-array-exclude/
-        img: [
-            { os: windows-latest, arch: x86 },
-            #{ os: windows-2019, arch: x86 },
-            #{ os: windows-latest, arch: x64 },
-            #{ os: windows-2019, arch: x64 },
-            #{ os: ubuntu-22.04, arch: x64 },
-            { os: ubuntu-latest, arch: x64 },
-            #{ os: ubuntu-18.04, arch: x64 },
-            { os: macOS-12, arch: x64 },
-            { os: macOS-latest, arch: x64 },
+        img:
+          [
+            { os: windows-latest, tripletOs: windows, arch: x86 },
+            { os: windows-2019, tripletOs: windows, arch: x86 },
+            { os: windows-latest, tripletOs: windows, arch: x64 },
+            { os: windows-2019, tripletOs: windows, arch: x64 },
+            { os: ubuntu-22.04, tripletOs: linux, arch: x64 },
+            { os: ubuntu-latest, tripletOs: linux, arch: x64 },
+            { os: ubuntu-18.04, tripletOs: linux, arch: x64 },
+            { os: macOS-12, tripletOs: osx, arch: x64 },
+            { os: macOS-latest, tripletOs: osx, arch: x64 },
           ]
         build_preset:
           [{ name: debug, outDir: Debug }, { name: release, outDir: Release }]
         compiler: [gcc-11, gcc-12, llvm-13, llvm-14]
         include:
           # MSVC should compile the same regardless of windows version
-          #- img: { os: windows-latest, tripletOs: windows, arch: x86 }
-          #  build_preset: { name: debug, outDir: Debug }
-          #  compiler: msvc
-          #- img: { os: windows-latest, tripletOs: windows, arch: x86 }
-          #  build_preset: { name: release, outDir: Release }
-          #  compiler: msvc
-          - img: { os: windows-latest, arch: x64 }
+          - img: { os: windows-latest, tripletOs: windows, arch: x86 }
             build_preset: { name: debug, outDir: Debug }
             compiler: msvc
           - img: { os: windows-latest, tripletOs: windows, arch: x86 }
