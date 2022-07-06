@@ -29,19 +29,12 @@ jobs:
       - name: Install Doxybook2
         shell: bash
         run: |
-          git clone https://github.com/matusnovak/doxybook2.git
-          cd doxybook2
-          vcpkg install --triplet x64-linux $(cat vcpkg.txt)
-          mkdir build
-          cmake -B ./build -G "Unix Makefiles" \
-              -DCMAKE_BUILD_TYPE=MinSizeRel \
-              -DCMAKE_TOOLCHAIN_FILE=${{ github.workspace }}/vcpkg/scripts/buildsystems/vcpkg.cmake
-          ..
-          cmake --build ./build --config MinSizeRel
+          wgeet https://github.com/matusnovak/doxybook2/releases/download/v1.4.0/doxybook2-linux-amd64-v1.4.0.zip
+          7z x doxybook2-linux-amd64-v1.4.0.zip -odoxybook2
       - name: Make engine docs directory if it does not exist
         run: mkdir -p ${{ github.workspace }}/docs/engine
       - name: Build doxybook2 docs
-        run: ${{ github.workspace }}/doxybook2/build/src/DoxybookCli/doxybook2 --input ${{ github.workspace }}/doxygen/xml --output ${{ github.workspace }}/docs/engine --config ${{ github.workspace }}/.doxybook/config.json
+        run: ${{ github.workspace }}/doxybook2/bin/doxybook2 --input ${{ github.workspace }}/doxygen/xml --output ${{ github.workspace }}/docs/engine --config ${{ github.workspace }}/.doxybook/config.json
       - name: Display changed files
         run: git status
       - name: Commit any clang format changes
