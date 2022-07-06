@@ -70,6 +70,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
       - name: Setup Cpp
+        if: matrix.compiler != 'msvc'
         uses: aminya/setup-cpp@v1
         with:
           compiler: ${{ matrix.compiler }}
