@@ -15,31 +15,32 @@ jobs:
         # https://www.scivision.dev/github-actions-strategy-array-exclude/
         img:
           [
-            { os: windows-latest, arch: x86 },
-            { os: windows-2019, arch: x86 },
-            { os: windows-latest, arch: x64 },
-            { os: windows-2019, arch: x64 },
-            { os: ubuntu-22.04, arch: x64 },
-            { os: ubuntu-latest, arch: x64 },
-            { os: ubuntu-18.04, arch: x64 },
-            { os: macOS-12, arch: x64 },
-            { os: macOS-latest, arch: x64 },
+            { os: windows-latest, tripletOs: windows, arch: x86 },
+            { os: windows-2019, tripletOs: windows, arch: x86 },
+            { os: windows-latest, tripletOs: windows, arch: x64 },
+            { os: windows-2019, tripletOs: windows, arch: x64 },
+            { os: ubuntu-22.04, tripletOs: linux, arch: x64 },
+            { os: ubuntu-latest, tripletOs: linux, arch: x64 },
+            { os: ubuntu-18.04, tripletOs: linux, arch: x64 },
+            { os: macOS-12, tripletOs: osx, arch: x64 },
+            { os: macOS-latest, tripletOs: osx, arch: x64 },
           ]
-        build_preset: [debug, release]
+        build_preset:
+          [{ name: debug, outDir: Debug }, { name: release, outDir: Release }]
         compiler: [gcc-11, gcc-12, llvm-13, llvm-14]
         include:
           # MSVC should compile the same regardless of windows version
-          - img: { os: windows-latest, arch: x86 }
-            build_preset: debug
+          - img: { os: windows-latest, tripletOs: windows, arch: x86 }
+            build_preset: { name: debug, outDir: Debug }
             compiler: msvc
-          - img: { os: windows-latest, arch: x86 }
-            build_preset: release
+          - img: { os: windows-latest, tripletOs: windows, arch: x86 }
+            build_preset: { name: release, outDir: Release }
             compiler: msvc
-          - img: { os: windows-latest, arch: x64 }
-            build_preset: debug
+          - img: { os: windows-latest, tripletOs: windows, arch: x64 }
+            build_preset: { name: debug, outDir: Debug }
             compiler: msvc
-          - img: { os: windows-latest, arch: x64 }
-            build_preset: release
+          - img: { os: windows-latest, tripletOs: windows, arch: x64 }
+            build_preset: { name: release, outDir: Release }
             compiler: msvc
         exclude:
           - img: { os: macOS-12 }
@@ -57,7 +58,7 @@ jobs:
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
       VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
-      SHOULD_PUBLISH: ${{ contains(matrix.img.os, 'latest') && matrix.build_preset == 'release' }}
+      VCPKG_DEFAULT_TRIPLET: ${{ matrix.img.arch }}-${{ matrix.img.tripletOs }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -69,42 +70,35 @@ jobs:
           sudo apt-get update
           sudo apt-get install libgl1-mesa-dev xorg-dev libglu1-mesa-dev libxinerama-dev libxcursor-dev p7zip-full -y
       - name: Setup Cpp
-        uses: aminya/setup-cpp@v1
         if: matrix.compiler != 'msvc'
+        uses: aminya/setup-cpp@v1
         with:
           compiler: ${{ matrix.compiler }}
           vcvarsall: ${{ runner.os == 'Windows' }}
-      - uses: ./.github/actions/setup-vcpkg
+      - name: Restore artifacts, or run vcpkg, build and cache artifacts
+        uses: lukka/run-vcpkg@v10
         with:
-          arch: ${{ matrix.img.arch }}
+          appendedCacheKey: ${{ env.VCPKG_DEFAULT_TRIPLET }}
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
       - name: Configure cmake and build
         uses: lukka/run-cmake@v10
         with:
           configurePreset: ${{ env.CONFIG_PRESET }}
-          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset }}
-          #testPreset: ${{ env.CONFIG_PRESET }}-tests-${{ matrix.build_preset }}
-      - name: Set BUILD_CONFIG_DIR
-        if: env.SHOULD_PUBLISH
-        shell: bash
-        run: |
-          case ${{ matrix.build_preset }} in
-          debug) configDir=Debug ;;
-          release) configDir=Release ;;
-          esac
-          echo "BUILD_CONFIG_DIR=$configDir" >> $GITHUB_ENV
+          buildPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
+          testPreset: ${{ env.CONFIG_PRESET }}-${{ matrix.build_preset.name }}
       - name: Upload the build artifact
         uses: actions/upload-artifact@v3
-        if: env.SHOULD_PUBLISH
+        if: contains(matrix.img.os, 'latest') && matrix.build_preset.name == 'release'
         with:
-          name: ${{ matrix.img.arch }}-${{ matrix.img.os }}-${{ matrix.build_preset }}
+          name: ${{ env.VCPKG_DEFAULT_TRIPLET }}-${{ matrix.build_preset.name }}
           path: |
             ${{ env.CLIENT_BUILD_DIR }}/rpg-client*
             ${{ env.CLIENT_BUILD_DIR }}/*.dll
             ${{ env.SERVER_BUILD_DIR }}/rpg-server*
           if-no-files-found: ignore
         env:
-          CLIENT_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/client/${{ env.BUILD_CONFIG_DIR }}
-          SERVER_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/server/${{ env.BUILD_CONFIG_DIR }}
+          CLIENT_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/client/${{ matrix.build_preset.outDir }}
+          SERVER_BUILD_DIR: ${{ github.workspace }}/builds/${{ env.CONFIG_PRESET }}/server/${{ matrix.build_preset.outDir }}
   publish:
     runs-on: ubuntu-latest
     needs: build
@@ -115,8 +109,8 @@ jobs:
         uses: actions/download-artifact@v3
       - name: Package release
         run: |
-          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/client/${{ env.BUILD_CONFIG_DIR }}"; done
-          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/server/${{ env.BUILD_CONFIG_DIR }}"; done
+          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/client/${{ matrix.build_preset.outDir }}"; done
+          for i in */; do zip --junk-paths -r -u "${i%/}.zip" "$i/server/${{ matrix.build_preset.outDir }}"; done
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
         with:

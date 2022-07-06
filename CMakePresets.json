@@ -18,15 +18,6 @@
 					"value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
 				}
 			}
-		},
-		{
-			"name": "ninja-multi-vcpkg-tests",
-			"displayName": "Ninja Multi-Config Tests",
-			"description": "Enables building of tests",
-			"inherits": "ninja-multi-vcpkg",
-			"cacheVariables": {
-				"BUILD_TESTS": true
-			}
 		}
 	],
 	"buildPresets": [
@@ -57,20 +48,13 @@
 			"description": "Passes -v to Ninja",
 			"configurePreset": "ninja-multi-vcpkg",
 			"nativeToolOptions": ["-v"]
-		},
-		{
-			"name": "ninja-multi-vcpkg-tests-debug",
-			"configurePreset": "ninja-multi-vcpkg-tests",
-			"displayName": "Build ninja-multi-vcpkg-tests",
-			"description": "Build ninja-multi-vcpkg tests configuration",
-			"configuration": "Debug"
 		}
 	],
 	"testPresets": [
 		{
 			"name": "test-base",
 			"hidden": true,
-			"configurePreset": "ninja-multi-vcpkg-tests",
+			"configurePreset": "ninja-multi-vcpkg",
 			"description": "Enable output on failure",
 			"output": {
 				"outputOnFailure": true
@@ -80,13 +64,13 @@
 			}
 		},
 		{
-			"name": "ninja-multi-vcpkg-tests-debug",
+			"name": "ninja-multi-vcpkg-debug",
 			"configuration": "Debug",
 			"inherits": "test-base"
 		},
 		{
-			"name": "ninja-multi-vcpkg-tests-release",
-			"configuration": "RelWithDebInfo",
+			"name": "ninja-multi-vcpkg-release",
+			"configuration": "Release",
 			"inherits": "test-base"
 		}
 	]
