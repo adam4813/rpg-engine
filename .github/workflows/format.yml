@@ -10,16 +10,17 @@ jobs:
   format:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+    env:
+      VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
     steps:
       - uses: actions/checkout@v2
-        with:
-          token: "${{ secrets.ACTIONS_TOKEN }}"
+      - uses: lukka/get-cmake@latest
       - name: Clang format
-        uses: DoozyX/clang-format-lint-action@v0.11
+        uses: DoozyX/clang-format-lint-action@v0.14
         with:
           source: "."
-          clangFormatVersion: 11
-          inplace: True
+          clangFormatVersion: 14
+          inplace: true
       - uses: mattnotmitt/doxygen-action@v1
         name: Build docs
         with:
@@ -37,17 +38,7 @@ jobs:
         uses: lukka/run-vcpkg@v4
         with:
           vcpkgArguments: "--triplet x64-linux $DOXYBOOK_PACKAGES"
-          vcpkgDirectory: "${{ github.workspace }}/vcpkg"
-          vcpkgGitCommitId: "5eea585548058540c3b73d087eb101c033b5fa85"
-      - name: Remove inja from vcpkg so it can be updated to head version
-        run: |
-          ${{ github.workspace }}/vcpkg/vcpkg remove --recurse inja
-      - name: Install Doxybook2 inja head per bug issue
-        uses: lukka/run-vcpkg@v4
-        with:
-          vcpkgArguments: "--triplet x64-linux inja --head"
-          vcpkgDirectory: "${{ github.workspace }}/vcpkg"
-          vcpkgGitCommitId: "5eea585548058540c3b73d087eb101c033b5fa85"
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
       - name: Configure doxybook2 cmake and build
         uses: lukka/run-cmake@v3
         with:
@@ -66,7 +57,6 @@ jobs:
       - name: Display changed files
         run: git status
       - name: Commit any clang format changes
-        uses: EndBug/add-and-commit@v7
+        uses: EndBug/add-and-commit@v9
         with:
           message: "Committing clang-format and engine doc changes"
-          branch: "master"
