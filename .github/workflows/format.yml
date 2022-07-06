@@ -31,15 +31,9 @@ jobs:
         with:
           repository: matusnovak/doxybook2
           path: doxybook2
-      - name: Set doxybook2 vcpkg packages from file
-        run: |
-          echo "DOXYBOOK_PACKAGES=$(cat ${{ github.workspace }}/doxybook2/vcpkg.txt)" >> $GITHUB_ENV
       - name: Install Doxybook2 deps
-        uses: lukka/run-vcpkg@v10
-        with:
-          runVcpkgFormatString: "[`install`, `--recurse`, `--clean-after-build`, `--x-install-root`, `$[env.VCPKG_INSTALLED_DIR]`, `--triplet`, `$[env.VCPKG_DEFAULT_TRIPLET]`, `$DOXYBOOK_PACKAGES`]"
-          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
-          runVcpkgInstall: true
+        run: |
+          vcpkg install --triplet x64-linux $(cat vcpkg.txt)
       - name: Configure doxybook2 cmake and build
         uses: lukka/run-cmake@v3
         with:
