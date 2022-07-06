@@ -99,7 +99,8 @@ bool OS::InitializeWindow(
 		return false;
 	}
 
-	logger->info("{} - {}",
+	logger->info(
+			"{} - {}",
 			reinterpret_cast<const char*>(glGetString(GL_VENDOR)),
 			reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 	logger->info("GL version : {} GLSL version : {}", gl_version, glsl_version);
@@ -133,13 +134,11 @@ bool OS::InitializeWindow(
 
 	focused_window = this->window;
 	mouse_locked = false;
-	
+
 	return true;
 }
 
-void OS::MakeCurrent() const {
-	glfwMakeContextCurrent(this->window);
-}
+void OS::MakeCurrent() const { glfwMakeContextCurrent(this->window); }
 
 void OS::SetWindowAspectRatio(const int numerator, const int denominator) const {
 	glfwSetWindowAspectRatio(this->window, numerator, denominator);

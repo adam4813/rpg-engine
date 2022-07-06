@@ -73,4 +73,4 @@ protected:
 	std::atomic<LockingQueue<Event<T>>*> write_queue;
 };
 
-} // namespace rpg::event
+} // namespace rpg::events
