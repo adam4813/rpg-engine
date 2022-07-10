@@ -54,7 +54,8 @@ temp/
 .vs/
 build-idea/
 .idea/
-doxygen/
+/doxygen/
+/mkdocs/
 vcpkg/
 vcpkg_installed/
 builds/
