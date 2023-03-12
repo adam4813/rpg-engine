@@ -1,5 +1,5 @@
 # RPG Game
-Moderm (C++17/20) game engine for learning.
+Modern (C++17/20) game engine for learning.
 
 ## Minimum Compiler Versions
 The following [compilers support](https://en.cppreference.com/w/cpp/compiler_support) the few C++20 features that are being used

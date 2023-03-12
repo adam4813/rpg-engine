@@ -32,5 +32,5 @@ add_subdirectory(server)
 add_subdirectory(tests)
 
 if (BUILD_DOCS)
-	add_subdirectory(docs_gen)
+	add_subdirectory(docs_targets)
 endif()
