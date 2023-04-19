@@ -42,21 +42,21 @@ jobs:
             build_preset: { name: release, outDir: Release }
             compiler: msvc
         exclude:
+          - img: { os: macOS-11 }
+
           - img: { os: windows-2019 }
             compiler: gcc-11
           - img: { os: windows-latest }
             compiler: gcc-11
-          - img: { os: macOS-11 }
-            compiler: gcc-11
           - img: { os: macOS-latest }
             compiler: gcc-11
 
+          - img: { os: windows-2019 }
+            compiler: llvm-13.0.0
           - img: { os: windows-latest }
-            compiler: llvm-13
-          - img: { os: macOS-11 }
-            compiler: llvm-13
+            compiler: llvm-13.0.0
           - img: { os: macOS-latest }
-            compiler: llvm-13
+            compiler: llvm-13.0.0
     runs-on: ${{ matrix.img.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg

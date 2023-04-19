@@ -16,5 +16,5 @@
 		"gtest"
 	],
 	"supports": "(windows & x86) | (windows & x64) | (linux & x64) | (osx & x64)",
-	"builtin-baseline": "5ddd7f02689b7c5aab78711d77f61db5d2e5e79c"
+	"builtin-baseline": "6f7ffeb18f99796233b958aaaf14ec7bd4fb64b2"
 }
