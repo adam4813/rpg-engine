@@ -21,13 +21,12 @@ jobs:
             { os: windows-2019, tripletOs: windows, arch: x64 },
             { os: ubuntu-22.04, tripletOs: linux, arch: x64 },
             { os: ubuntu-latest, tripletOs: linux, arch: x64 },
-            { os: ubuntu-18.04, tripletOs: linux, arch: x64 },
-            { os: macOS-12, tripletOs: osx, arch: x64 },
+            { os: macOS-11, tripletOs: osx, arch: x64 },
             { os: macOS-latest, tripletOs: osx, arch: x64 },
           ]
         build_preset:
           [{ name: debug, outDir: Debug }, { name: release, outDir: Release }]
-        compiler: [gcc-11, gcc-12, llvm-13, llvm-14]
+        compiler: [gcc-11, gcc-12, llvm-13.0.0, llvm-14]
         include:
           # MSVC should compile the same regardless of windows version
           - img: { os: windows-latest, tripletOs: windows, arch: x86 }
