@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.19)
 project(rpg VERSION 0.1)
 enable_testing()
 
+option(BUILD_DOCS "Build documentation" OFF)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -28,3 +30,7 @@ add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
 add_subdirectory(tests)
+
+if (BUILD_DOCS)
+	add_subdirectory(docs_targets)
+endif()

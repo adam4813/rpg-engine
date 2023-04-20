@@ -1,4 +1,7 @@
-site_name: RPG
+site_name: RPG Engine docs
 theme: readthedocs
 markdown_extensions:
   - admonition
+
+plugins:
+  - search

@@ -21,20 +21,24 @@ jobs:
           source: "."
           clangFormatVersion: 14
           inplace: true
+
       - uses: mattnotmitt/doxygen-action@v1
         name: Build docs
         with:
           working-directory: .
           doxyfile-path: "./Doxyfile"
+
       - name: Install Doxybook2
         shell: bash
         run: |
           wget https://github.com/matusnovak/doxybook2/releases/download/v1.4.0/doxybook2-linux-amd64-v1.4.0.zip
           7z x doxybook2-linux-amd64-v1.4.0.zip -odoxybook2
+
       - name: Make engine docs directory if it does not exist
         run: mkdir -p ${{ github.workspace }}/docs/engine
       - name: Build doxybook2 docs
         run: ${{ github.workspace }}/doxybook2/bin/doxybook2 --input ${{ github.workspace }}/doxygen/xml --output ${{ github.workspace }}/docs/engine --config ${{ github.workspace }}/.doxybook/config.json
+
       - name: Display changed files
         run: git status
       - name: Commit any clang format changes
