@@ -51,6 +51,8 @@ jobs:
           - img: { os: macOS-latest }
             compiler: gcc-11
 
+          - compiler: gcc-12
+
           - img: { os: windows-2019 }
             compiler: llvm-13.0.0
           - img: { os: windows-latest }
@@ -60,7 +62,7 @@ jobs:
     runs-on: ${{ matrix.img.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
-      VCPKG_COMMIT_ID: f78f4440df86358575dea65e748a39fdad41eb85
+      VCPKG_COMMIT_ID: 6f7ffeb18f99796233b958aaaf14ec7bd4fb64b2
       VCPKG_DEFAULT_TRIPLET: ${{ matrix.img.arch }}-${{ matrix.img.tripletOs }}
     steps:
       - uses: actions/checkout@v3
