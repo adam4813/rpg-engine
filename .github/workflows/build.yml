@@ -59,6 +59,8 @@ jobs:
             compiler: llvm-13.0.0
           - img: { os: macOS-latest }
             compiler: llvm-13.0.0
+          - img: { os: macOS-latest }
+            compiler: llvm-14.0.0
     runs-on: ${{ matrix.img.os }}
     env:
       CONFIG_PRESET: ninja-multi-vcpkg
